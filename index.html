@@ -270,7 +270,20 @@ function generate() {
   if (current.what.includes("記憶")) addLog("記憶の断片を検知");
   if (current.what.includes("パーティーをした") || current.what.includes("歌い出した") || current.what.includes("踊り出した")) {
   addLog("楽しげな雰囲気を感知");
+  }
   if (current.what.includes("扉をぶち壊した")) addLog("扉の破片を検知");
+  // 複合条件（A かつ B）のチェック
+  if (current.when.includes("千年前") && current.who.includes("古代勇者が")) {
+    addLog("伝説の旅を検出");
+  }
+  if (current.who.includes("神王グゴール") && current.what.includes("爆発した")) {
+    addLog("神王爆破により物語終了");
+  }
+  if (current.who.includes("參ノ護王") && current.what.includes("お団子を食べた")) {
+    addLog("魔王の主食を検出");
+  }
+
+    
   }
     
   saveData();
