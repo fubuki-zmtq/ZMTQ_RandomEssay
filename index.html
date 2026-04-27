@@ -106,6 +106,63 @@ button:hover {
     margin-top: 12px;
   }
 }
+
+.achievement {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #111;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 10px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: 0.4s;
+  pointer-events: none;
+  font-size: 14px;
+}
+
+.achievement.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* スマホ用 */
+@media (max-width: 600px) {
+  .achievement {
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, 20px);
+  }
+  .achievement.show {
+    transform: translate(-50%, 0);
+  }
+}
+
+.logModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logBox {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9);}
+  to { opacity: 1; transform: scale(1);}
+}
+  
 </style>
 
 </head>
@@ -120,6 +177,18 @@ button:hover {
   <button onclick="openFortune()" style="background:#64748b;">今日の運勢を見る</button>
 </div>
 
+<div style="margin-top:10px; font-size:12px; color:gray; cursor:pointer;" onclick="openLog()">
+  ログを確認する
+</div>
+
+<div id="logModal" class="logModal hidden">
+  <div class="logBox">
+    <h3>観測ログ</h3>
+    <div id="logContent"></div>
+    <button onclick="closeLog()">閉じる</button>
+  </div>
+</div>
+  
 <!-- ローディング -->
 <div id="loading" class="card hidden">
   <p>生成中…</p>
@@ -179,7 +248,24 @@ function generate() {
     what: pick("what")
   };
   updateText();
-}
+  genCount++;
+
+  if (genCount === 1) unlock("初めて生成した");
+  if (genCount === 10) unlock("10回生成した");
+  if (genCount === 100) unlock("100回生成した");
+  if (genCount === 1000) unlock("1000回生成した");
+
+  if (rareCount === 1) unlock("レアを引いた");
+  if (rareCount === 2) unlock("スーパーレアを引いた");
+  if (rareCount === 3) unlock("ハイパーレアを引いた");
+  if (rareCount >= 4) unlock("ウルトラレアを引いた");
+
+  if (current.who.includes("勇者")) addLog("勇者を確認");
+  if (current.what.includes("爆発")) addLog("爆発を検知");
+  if (current.what.includes("クレープ")) addLog("クレープ摂取済み");
+  if (current.what.includes("記憶")) addLog("記憶の断片を検知");
+  if (current.where.includes("月")) addLog("異常領域：月面反応あり");
+  }
 
 function updateText() {
   const text = `${current.when}、${current.where}${current.who}${current.what}`;
@@ -265,6 +351,8 @@ const fortunes = {
 const specialFortune = [
   { name: "フブ吉", msg: "魔力の高い一日になるでしょう" },
   { name: "大凶", msg: "魔王軍の襲来に注意！" }
+  if (sp.name === "フブ吉") unlock("フブ吉を引いた");
+  if (sp.name === "大凶") unlock("大凶を引いた");
 ];
 
 function openFortune() {
@@ -291,13 +379,57 @@ function openFortune() {
   title.innerText = f.name;
   msg.innerText = m;
   title.classList.add(f.class);
+
+  fortuneCount++;
+
+  if (fortuneCount === 1) unlock("初めて占った");
+  if (fortuneCount === 10) unlock("10回占った");
+  if (fortuneCount === 100) unlock("100回占った");
+  if (fortuneCount === 1000) unlock("1000回占った");
 }
 
 function backHome() {
   document.getElementById("fortune").classList.add("hidden");
   document.getElementById("home").classList.remove("hidden");
 }
+
+let genCount = 0;
+let fortuneCount = 0;
+let unlocked = new Set();
+
+function unlock(name) {
+  if (unlocked.has(name)) return;
+  unlocked.add(name);
+
+  const el = document.getElementById("achievement");
+  el.innerText = `🏆 実績解除：${name}`;
+  el.classList.add("show");
+
+  setTimeout(() => {
+    el.classList.remove("show");
+  }, 2000);
+}
+
+let logs = [];
+
+function addLog(text) {
+  logs.push(text);
+}
+
+function openLog() {
+  document.getElementById("logModal").classList.remove("hidden");
+
+  const box = document.getElementById("logContent");
+  box.innerHTML = logs.map(l => `<div>${l}</div>`).join("");
+}
+
+function closeLog() {
+  document.getElementById("logModal").classList.add("hidden");
+}
+  
 </script>
 
+<div id="achievement" class="achievement"></div>
+  
 </body>
 </html>
