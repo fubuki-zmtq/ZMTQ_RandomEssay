@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ZMTQランダム作文</title>
+<style>
+body {
+  margin: 0;
+  font-family: "Noto Sans JP", sans-serif;
+  background: linear-gradient(135deg, #eef2ff, #e0f2fe);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  text-align: center;
+}
+
+.card {
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  width: 320px;
+}
+
+h1 {
+  margin-bottom: 10px;
+}
+
+button {
+  margin-top: 20px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  background: #6366f1;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.hidden {
+  display: none;
+}
+
+.spinner {
+  margin: 20px auto;
+  width: 40px;
+  height: 40px;
+  border: 5px solid #ddd;
+  border-top: 5px solid #6366f1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.result {
+  margin-top: 20px;
+  font-size: 18px;
+  line-height: 1.6;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- ホーム -->
+  <div id="home" class="card">
+    <h1>ZMTQランダム作文</h1>
+    <p>「いつ」「どこで」「誰が」「何をした」をランダムに生成します。</p>
+    <button onclick="start()">生成する</button>
+  </div>
+
+  <!-- ローディング -->
+  <div id="loading" class="card hidden">
+    <p>生成中…</p>
+    <div class="spinner"></div>
+  </div>
+
+  <!-- 結果 -->
+  <div id="result" class="card hidden">
+    <h2>生成結果</h2>
+    <div id="text" class="result" onclick="copyText()"></div>
+    <button onclick="location.reload()">もう一度</button>
+  </div>
+
+</div>
+
+<script>
+const whenList = [
+"今日","さっき","昨日","一週間前","三か月前","一年前","十年前","千年前","だいぶ前","いつか分からんけど"
+];
+
+const whereList = [
+"バネッサで","妖精国で","氷河坑道連邦で","獣の国で","世界樹図書館で","東の国で","華都で","ニライカナイで","吸血鬼城で","魔王領で","教団市国で","蒼い月の裏側で","その辺で"
+];
+
+const whoList = [
+"勇者が","古代勇者が","魔王軍が","魔王軍四天王が","妖精が","魔導士が","騎士が","獣人が","商人が","神官が","壱ノ護王が","弐ノ護王が","參ノ護王が","肆ノ護王が","神王グゴールが","その辺の人が"
+];
+
+const whatList = [
+"魔法の練習をした","ピクニックをした","お昼寝した","パーティーをした","爆発した","転んだ","歌い出した","踊り出した","迷言を言った","クレープを食べた","猛勉強した","記憶を取り戻した","武器を買った"
+];
+
+function random(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function start() {
+  document.getElementById("home").classList.add("hidden");
+  document.getElementById("loading").classList.remove("hidden");
+
+  setTimeout(() => {
+    const text =
+      random(whenList) + "、" +
+      random(whereList) +
+      random(whoList) +
+      random(whatList);
+
+    document.getElementById("text").innerText = text;
+
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("result").classList.remove("hidden");
+  }, 3000);
+}
+
+function copyText() {
+  const text = document.getElementById("text").innerText;
+  navigator.clipboard.writeText(text);
+  alert("コピーしました！");
+}
+</script>
+
+</body>
+</html>
