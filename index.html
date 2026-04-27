@@ -11,6 +11,7 @@ body {
   font-family: "Noto Sans JP", sans-serif;
   background: linear-gradient(135deg, #eef2ff, #e0f2fe);
   display: flex;
+  flex-direction: column; /* 追加：要素を縦に並べる */
   justify-content: center;
   align-items: center;
   height: 100vh;
@@ -22,7 +23,7 @@ body {
   border-radius: 20px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   width: 360px;
-  max-width: 90vw; /* ←これ追加 */
+  max-width: 90vw;
   text-align: center;
 }
 
@@ -41,7 +42,8 @@ button:hover {
   transform: translateY(-2px);
 }
 
-.hidden { display: none; }
+/* 修正：!importantをつけて強制的に非表示にする */
+.hidden { display: none !important; }
 
 .spinner {
   margin: 20px auto;
@@ -162,14 +164,12 @@ button:hover {
   from { opacity: 0; transform: scale(0.9);}
   to { opacity: 1; transform: scale(1);}
 }
-  
 </style>
 
 </head>
 
 <body>
 
-<!-- ホーム -->
 <div id="home" class="card">
   <h1>ZMTQランダム作文</h1>
   <p>「いつ・どこで・誰が・何をした」をランダム生成</p>
@@ -177,7 +177,7 @@ button:hover {
   <button onclick="openFortune()" style="background:#64748b;">今日の運勢を見る</button>
 </div>
 
-<div style="margin-top:10px; font-size:12px; color:gray; cursor:pointer;" onclick="openLog()">
+<div style="margin-top:15px; font-size:12px; color:gray; cursor:pointer;" onclick="openLog()">
   ログを確認する
 </div>
 
@@ -189,13 +189,11 @@ button:hover {
   </div>
 </div>
   
-<!-- ローディング -->
 <div id="loading" class="card hidden">
   <p>生成中…</p>
   <div class="spinner"></div>
 </div>
 
-<!-- 結果 -->
 <div id="result" class="card hidden">
   <h2>生成結果</h2>
   <div class="note">※クリック / タップでコピーできます</div>
@@ -204,7 +202,6 @@ button:hover {
   <button onclick="location.reload()">もう一度</button>
 </div>
 
-<!-- 占い -->
 <div id="fortune" class="card hidden">
   <h2>ZMTQ占い</h2>
   <div id="fortuneTitle" style="font-size:28px; font-weight:bold;"></div>
@@ -265,7 +262,7 @@ function generate() {
   if (current.what.includes("クレープ")) addLog("クレープ摂取済み");
   if (current.what.includes("記憶")) addLog("記憶の断片を検知");
   if (current.where.includes("月")) addLog("異常領域：月面反応あり");
-  }
+}
 
 function updateText() {
   const text = `${current.when}、${current.where}${current.who}${current.what}`;
@@ -348,11 +345,10 @@ const fortunes = {
   }
 };
 
+// 修正：配列の中にあった if文 を削除して下に移動しました
 const specialFortune = [
   { name: "フブ吉", msg: "魔力の高い一日になるでしょう" },
   { name: "大凶", msg: "魔王軍の襲来に注意！" }
-  if (sp.name === "フブ吉") unlock("フブ吉を引いた");
-  if (sp.name === "大凶") unlock("大凶を引いた");
 ];
 
 function openFortune() {
@@ -369,6 +365,11 @@ function openFortune() {
     title.innerText = sp.name;
     msg.innerText = sp.msg;
     title.classList.add("special");
+    
+    // 修正：配列の中にあった if文 を占いを引いた後の処理に移動しました
+    if (sp.name === "フブ吉") unlock("フブ吉を引いた");
+    if (sp.name === "大凶") unlock("大凶を引いた");
+    
     return;
   }
 
