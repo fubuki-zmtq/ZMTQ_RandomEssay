@@ -11,10 +11,10 @@ body {
   font-family: "Noto Sans JP", sans-serif;
   background: linear-gradient(135deg, #eef2ff, #e0f2fe);
   display: flex;
-  flex-direction: column; /* 追加：要素を縦に並べる */
+  flex-direction: column; /* 要素を縦に並べる */
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 .card {
@@ -42,7 +42,6 @@ button:hover {
   transform: translateY(-2px);
 }
 
-/* 修正：!importantをつけて強制的に非表示にする */
 .hidden { display: none !important; }
 
 .spinner {
@@ -77,36 +76,27 @@ button:hover {
 .super { color: purple; }
 .rare1 { color: blue; }
 
-/* 占いカラー */
 .daikichi { color: gold; }
 .chukichi { color: green; }
 .shokichi { color: orange; }
 .kyo { color: purple; }
 .special { color: #38bdf8; }
 
+/* ログ確認ボタンのスタイル */
+.log-trigger {
+  margin-top: 20px;
+  font-size: 12px;
+  color: gray;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 @media (max-width: 600px) {
-  body {
-    padding: 10px;
-    height: auto;
-  }
-
-  .card {
-    width: 100%;
-    padding: 25px;
-  }
-
-  h1 {
-    font-size: 22px;
-  }
-
-  .result {
-    font-size: 16px;
-  }
-
-  button {
-    width: 100%;
-    margin-top: 12px;
-  }
+  body { padding: 10px; height: auto; }
+  .card { width: 100%; padding: 25px; }
+  h1 { font-size: 22px; }
+  .result { font-size: 16px; }
+  button { width: 100%; margin-top: 12px; }
 }
 
 .achievement {
@@ -122,24 +112,10 @@ button:hover {
   transition: 0.4s;
   pointer-events: none;
   font-size: 14px;
+  z-index: 1000;
 }
 
-.achievement.show {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* スマホ用 */
-@media (max-width: 600px) {
-  .achievement {
-    left: 50%;
-    right: auto;
-    transform: translate(-50%, 20px);
-  }
-  .achievement.show {
-    transform: translate(-50%, 0);
-  }
-}
+.achievement.show { opacity: 1; transform: translateY(0); }
 
 .logModal {
   position: fixed;
@@ -148,6 +124,7 @@ button:hover {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 2000;
 }
 
 .logBox {
@@ -157,17 +134,9 @@ button:hover {
   width: 300px;
   max-height: 400px;
   overflow-y: auto;
-  animation: fadeIn 0.3s;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.9);}
-  to { opacity: 1; transform: scale(1);}
 }
 </style>
-
 </head>
-
 <body>
 
 <div id="home" class="card">
@@ -177,18 +146,6 @@ button:hover {
   <button onclick="openFortune()" style="background:#64748b;">今日の運勢を見る</button>
 </div>
 
-<div style="margin-top:15px; font-size:12px; color:gray; cursor:pointer;" onclick="openLog()">
-  ログを確認する
-</div>
-
-<div id="logModal" class="logModal hidden">
-  <div class="logBox">
-    <h3>観測ログ</h3>
-    <div id="logContent"></div>
-    <button onclick="closeLog()">閉じる</button>
-  </div>
-</div>
-  
 <div id="loading" class="card hidden">
   <p>生成中…</p>
   <div class="spinner"></div>
@@ -199,7 +156,7 @@ button:hover {
   <div class="note">※クリック / タップでコピーできます</div>
   <div id="text" class="result" onclick="copyText()"></div>
   <div id="rarity" class="rare"></div>
-  <button onclick="location.reload()">もう一度</button>
+  <button onclick="backHome()">もう一度</button>
 </div>
 
 <div id="fortune" class="card hidden">
@@ -209,8 +166,50 @@ button:hover {
   <button onclick="backHome()">戻る</button>
 </div>
 
+<div class="log-trigger" onclick="openLog()">ログを確認する</div>
+
+<div id="logModal" class="logModal hidden">
+  <div class="logBox">
+    <h3>観測ログ</h3>
+    <div id="logContent"></div>
+    <button onclick="closeLog()" style="width:100%;">閉じる</button>
+  </div>
+</div>
+
+<div id="achievement" class="achievement"></div>
+
 <script>
-// ===== ランダム作文 =====
+// 状態管理
+let genCount = 0;
+let fortuneCount = 0;
+let unlocked = new Set();
+let logs = [];
+
+// セーブデータの読み込み
+function loadData() {
+  const saved = localStorage.getItem('zmtq_save_data');
+  if (saved) {
+    const data = JSON.parse(saved);
+    genCount = data.genCount || 0;
+    fortuneCount = data.fortuneCount || 0;
+    logs = data.logs || [];
+    unlocked = new Set(data.unlocked || []);
+  }
+}
+
+// セーブデータの保存
+function saveData() {
+  const data = {
+    genCount,
+    fortuneCount,
+    logs,
+    unlocked: Array.from(unlocked)
+  };
+  localStorage.setItem('zmtq_save_data', JSON.stringify(data));
+}
+
+window.onload = loadData;
+
 const normal = {
   when: ["今日","さっき","昨日","一週間前","三か月前","一年前","十年前","千年前","だいぶ前","いつか分からんけど"],
   where: ["バネッサで","妖精国で","氷河坑道連邦で","獣の国で","世界樹図書館で","東の国で","華都で","ニライカナイで","吸血鬼城で","魔王領で","教団市国で","蒼い月の裏側で","その辺で"],
@@ -225,7 +224,6 @@ const rare = {
   what: ["タイピングで競った"]
 };
 
-let current = {};
 let rareCount = 0;
 
 function pick(type) {
@@ -238,65 +236,55 @@ function pick(type) {
 
 function generate() {
   rareCount = 0;
-  current = {
+  const current = {
     when: pick("when"),
     where: pick("where"),
     who: pick("who"),
     what: pick("what")
   };
-  updateText();
+  updateText(current);
   genCount++;
 
-  if (genCount === 1) unlock("初めて生成した");
-  if (genCount === 10) unlock("10回生成した");
-  if (genCount === 100) unlock("100回生成した");
-  if (genCount === 1000) unlock("1000回生成した");
+  // 実績チェック
+  if (genCount >= 1) unlock("初めて生成した");
+  if (genCount >= 10) unlock("10回生成した");
+  if (genCount >= 100) unlock("100回生成した");
 
   if (rareCount === 1) unlock("レアを引いた");
   if (rareCount === 2) unlock("スーパーレアを引いた");
   if (rareCount === 3) unlock("ハイパーレアを引いた");
   if (rareCount >= 4) unlock("ウルトラレアを引いた");
 
+  // ログチェック
   if (current.who.includes("勇者")) addLog("勇者を確認");
   if (current.what.includes("爆発")) addLog("爆発を検知");
   if (current.what.includes("クレープ")) addLog("クレープ摂取済み");
   if (current.what.includes("記憶")) addLog("記憶の断片を検知");
   if (current.where.includes("月")) addLog("異常領域：月面反応あり");
+  
+  saveData();
 }
 
-function updateText() {
+function updateText(current) {
   const text = `${current.when}、${current.where}${current.who}${current.what}`;
   document.getElementById("text").innerText = text;
-
   const r = document.getElementById("rarity");
   r.className = "rare";
-
-  if (rareCount === 1) {
-    r.innerText = "レア！";
-    r.classList.add("rare1");
-  } else if (rareCount === 2) {
-    r.innerText = "スーパーレア！";
-    r.classList.add("super");
-  } else if (rareCount === 3) {
-    r.innerText = "ハイパーレア！";
-    r.classList.add("hyper");
-  } else if (rareCount >= 4) {
-    r.innerText = "ウルトラレア！！";
-    r.classList.add("ultra");
-  } else {
-    r.innerText = "";
-  }
+  if (rareCount === 1) { r.innerText = "レア！"; r.classList.add("rare1"); }
+  else if (rareCount === 2) { r.innerText = "スーパーレア！"; r.classList.add("super"); }
+  else if (rareCount === 3) { r.innerText = "ハイパーレア！"; r.classList.add("hyper"); }
+  else if (rareCount >= 4) { r.innerText = "ウルトラレア！！"; r.classList.add("ultra"); }
+  else { r.innerText = ""; }
 }
 
 function start() {
   document.getElementById("home").classList.add("hidden");
   document.getElementById("loading").classList.remove("hidden");
-
   setTimeout(() => {
     generate();
     document.getElementById("loading").classList.add("hidden");
     document.getElementById("result").classList.remove("hidden");
-  }, 3000);
+  }, 1500);
 }
 
 function copyText() {
@@ -305,47 +293,13 @@ function copyText() {
   alert("コピーしたよ！");
 }
 
-// ===== 占い =====
 const fortunes = {
-  daikichi: {
-    name: "大吉",
-    class: "daikichi",
-    msgs: [
-      "理由は特にない",
-      "魔法に目覚めるかも？",
-      "今宵は星が綺麗でしょう"
-    ]
-  },
-  chukichi: {
-    name: "中吉",
-    class: "chukichi",
-    msgs: [
-      "空が青いから",
-      "海が続いているから",
-      "光魔法を浴びたい"
-    ]
-  },
-  shokichi: {
-    name: "小吉",
-    class: "shokichi",
-    msgs: [
-      "言いたいことは言おう",
-      "おいしいご飯を食べよう",
-      "たくさん寝よう"
-    ]
-  },
-  kyo: {
-    name: "凶",
-    class: "kyo",
-    msgs: [
-      "そんな日もあるさ",
-      "魔防を高くしていこう",
-      "ここから上がるしかない"
-    ]
-  }
+  daikichi: { name: "大吉", class: "daikichi", msgs: ["理由は特にない", "魔法に目覚めるかも？", "今宵は星が綺麗でしょう"] },
+  chukichi: { name: "中吉", class: "chukichi", msgs: ["空が青いから", "海が続いているから", "光魔法を浴びたい"] },
+  shokichi: { name: "小吉", class: "shokichi", msgs: ["言いたいことは言おう", "おいしいご飯を食べよう", "たくさん寝よう"] },
+  kyo: { name: "凶", class: "kyo", msgs: ["そんな日もあるさ", "魔防を高くしていこう", "ここから上がるしかない"] }
 };
 
-// 修正：配列の中にあった if文 を削除して下に移動しました
 const specialFortune = [
   { name: "フブ吉", msg: "魔力の高い一日になるでしょう" },
   { name: "大凶", msg: "魔王軍の襲来に注意！" }
@@ -354,10 +308,8 @@ const specialFortune = [
 function openFortune() {
   document.getElementById("home").classList.add("hidden");
   document.getElementById("fortune").classList.remove("hidden");
-
   const title = document.getElementById("fortuneTitle");
   const msg = document.getElementById("fortuneMsg");
-
   title.className = "";
 
   if (Math.random() < 0.05) {
@@ -365,72 +317,52 @@ function openFortune() {
     title.innerText = sp.name;
     msg.innerText = sp.msg;
     title.classList.add("special");
-    
-    // 修正：配列の中にあった if文 を占いを引いた後の処理に移動しました
     if (sp.name === "フブ吉") unlock("フブ吉を引いた");
     if (sp.name === "大凶") unlock("大凶を引いた");
-    
-    return;
+  } else {
+    const keys = Object.keys(fortunes);
+    const f = fortunes[keys[Math.floor(Math.random() * keys.length)]];
+    title.innerText = f.name;
+    msg.innerText = f.msgs[Math.floor(Math.random() * f.msgs.length)];
+    title.classList.add(f.class);
   }
 
-  const keys = Object.keys(fortunes);
-  const f = fortunes[keys[Math.floor(Math.random() * keys.length)]];
-  const m = f.msgs[Math.floor(Math.random() * f.msgs.length)];
-
-  title.innerText = f.name;
-  msg.innerText = m;
-  title.classList.add(f.class);
-
   fortuneCount++;
-
-  if (fortuneCount === 1) unlock("初めて占った");
-  if (fortuneCount === 10) unlock("10回占った");
-  if (fortuneCount === 100) unlock("100回占った");
-  if (fortuneCount === 1000) unlock("1000回占った");
+  if (fortuneCount >= 1) unlock("初めて占った");
+  if (fortuneCount >= 10) unlock("10回占った");
+  saveData();
 }
 
 function backHome() {
   document.getElementById("fortune").classList.add("hidden");
+  document.getElementById("result").classList.add("hidden");
   document.getElementById("home").classList.remove("hidden");
 }
-
-let genCount = 0;
-let fortuneCount = 0;
-let unlocked = new Set();
 
 function unlock(name) {
   if (unlocked.has(name)) return;
   unlocked.add(name);
-
   const el = document.getElementById("achievement");
   el.innerText = `🏆 実績解除：${name}`;
   el.classList.add("show");
-
-  setTimeout(() => {
-    el.classList.remove("show");
-  }, 2000);
+  setTimeout(() => { el.classList.remove("show"); }, 2000);
+  saveData();
 }
-
-let logs = [];
 
 function addLog(text) {
   logs.push(text);
+  saveData();
 }
 
 function openLog() {
   document.getElementById("logModal").classList.remove("hidden");
-
   const box = document.getElementById("logContent");
-  box.innerHTML = logs.map(l => `<div>${l}</div>`).join("");
+  box.innerHTML = logs.length ? logs.map(l => `<div>・${l}</div>`).join("") : "ログはありません";
 }
 
 function closeLog() {
   document.getElementById("logModal").classList.add("hidden");
 }
-  
 </script>
-
-<div id="achievement" class="achievement"></div>
-  
 </body>
 </html>
