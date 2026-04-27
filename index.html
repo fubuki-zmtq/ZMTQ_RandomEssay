@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>ZMTQランダム作文</title>
+
 <style>
 body {
   margin: 0;
@@ -14,42 +15,31 @@ body {
   height: 100vh;
 }
 
-.container {
-  text-align: center;
-}
-
 .card {
   background: white;
   padding: 40px;
   border-radius: 20px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-  width: 320px;
-}
-
-h1 {
-  margin-bottom: 10px;
+  width: 360px;
+  text-align: center;
 }
 
 button {
-  margin-top: 20px;
-  padding: 12px 24px;
+  margin-top: 10px;
+  padding: 10px 20px;
   border: none;
   border-radius: 10px;
   background: #6366f1;
   color: white;
-  font-size: 16px;
   cursor: pointer;
   transition: 0.2s;
 }
 
 button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
-.hidden {
-  display: none;
-}
+.hidden { display: none; }
 
 .spinner {
   margin: 20px auto;
@@ -66,59 +56,126 @@ button:hover {
 }
 
 .result {
-  margin-top: 20px;
-  font-size: 18px;
-  line-height: 1.6;
   cursor: pointer;
+  margin-top: 10px;
+  font-size: 18px;
 }
+
+.note {
+  font-size: 12px;
+  color: gray;
+}
+
+.rare { margin-top: 10px; font-weight: bold; }
+
+.ultra { color: gold; }
+.hyper { color: red; }
+.super { color: purple; }
+.rare1 { color: blue; }
+
+/* 占いカラー */
+.daikichi { color: gold; }
+.chukichi { color: green; }
+.shokichi { color: orange; }
+.kyo { color: purple; }
+.special { color: #38bdf8; }
 </style>
+
 </head>
 
 <body>
 
-<div class="container">
+<!-- ホーム -->
+<div id="home" class="card">
+  <h1>ZMTQランダム作文</h1>
+  <p>「いつ・どこで・誰が・何をした」をランダム生成</p>
+  <button onclick="start()">生成する</button>
+  <button onclick="openFortune()" style="background:#64748b;">今日の運勢を見る</button>
+</div>
 
-  <!-- ホーム -->
-  <div id="home" class="card">
-    <h1>ZMTQランダム作文</h1>
-    <p>「いつ」「どこで」「誰が」「何をした」をランダムに生成します。</p>
-    <button onclick="start()">生成する</button>
-  </div>
+<!-- ローディング -->
+<div id="loading" class="card hidden">
+  <p>生成中…</p>
+  <div class="spinner"></div>
+</div>
 
-  <!-- ローディング -->
-  <div id="loading" class="card hidden">
-    <p>生成中…</p>
-    <div class="spinner"></div>
-  </div>
+<!-- 結果 -->
+<div id="result" class="card hidden">
+  <h2>生成結果</h2>
+  <div class="note">※クリック / タップでコピーできます</div>
+  <div id="text" class="result" onclick="copyText()"></div>
+  <div id="rarity" class="rare"></div>
+  <button onclick="location.reload()">もう一度</button>
+</div>
 
-  <!-- 結果 -->
-  <div id="result" class="card hidden">
-    <h2>生成結果</h2>
-    <div id="text" class="result" onclick="copyText()"></div>
-    <button onclick="location.reload()">もう一度</button>
-  </div>
-
+<!-- 占い -->
+<div id="fortune" class="card hidden">
+  <h2>ZMTQ占い</h2>
+  <div id="fortuneTitle" style="font-size:28px; font-weight:bold;"></div>
+  <div id="fortuneMsg" class="note" style="margin-top:10px;"></div>
+  <button onclick="backHome()">戻る</button>
 </div>
 
 <script>
-const whenList = [
-"今日","さっき","昨日","一週間前","三か月前","一年前","十年前","千年前","だいぶ前","いつか分からんけど"
-];
+// ===== ランダム作文 =====
+const normal = {
+  when: ["今日","さっき","昨日","一週間前","三か月前","一年前","十年前","千年前","だいぶ前","いつか分からんけど"],
+  where: ["バネッサで","妖精国で","氷河坑道連邦で","獣の国で","世界樹図書館で","東の国で","華都で","ニライカナイで","吸血鬼城で","魔王領で","教団市国で","蒼い月の裏側で","その辺で"],
+  who: ["勇者が","古代勇者が","魔王軍が","魔王軍四天王が","妖精が","魔導士が","騎士が","獣人が","商人が","神官が","壱ノ護王が","弐ノ護王が","參ノ護王が","肆ノ護王が","神王グゴールが","その辺の人が"],
+  what: ["魔法の練習をした","ピクニックをした","お昼寝した","パーティーをした","爆発した","転んだ","歌い出した","踊り出した","迷言を言った","クレープを食べた","猛勉強した","記憶を取り戻した","武器を買った"]
+};
 
-const whereList = [
-"バネッサで","妖精国で","氷河坑道連邦で","獣の国で","世界樹図書館で","東の国で","華都で","ニライカナイで","吸血鬼城で","魔王領で","教団市国で","蒼い月の裏側で","その辺で"
-];
+const rare = {
+  when: ["人類が滅ぶ前"],
+  where: ["僕らだけの世界で"],
+  who: ["護王全員が"],
+  what: ["タイピングで競った"]
+};
 
-const whoList = [
-"勇者が","古代勇者が","魔王軍が","魔王軍四天王が","妖精が","魔導士が","騎士が","獣人が","商人が","神官が","壱ノ護王が","弐ノ護王が","參ノ護王が","肆ノ護王が","神王グゴールが","その辺の人が"
-];
+let current = {};
+let rareCount = 0;
 
-const whatList = [
-"魔法の練習をした","ピクニックをした","お昼寝した","パーティーをした","爆発した","転んだ","歌い出した","踊り出した","迷言を言った","クレープを食べた","猛勉強した","記憶を取り戻した","武器を買った"
-];
+function pick(type) {
+  if (Math.random() < 0.05) {
+    rareCount++;
+    return rare[type][0];
+  }
+  return normal[type][Math.floor(Math.random() * normal[type].length)];
+}
 
-function random(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
+function generate() {
+  rareCount = 0;
+  current = {
+    when: pick("when"),
+    where: pick("where"),
+    who: pick("who"),
+    what: pick("what")
+  };
+  updateText();
+}
+
+function updateText() {
+  const text = `${current.when}、${current.where}${current.who}${current.what}`;
+  document.getElementById("text").innerText = text;
+
+  const r = document.getElementById("rarity");
+  r.className = "rare";
+
+  if (rareCount === 1) {
+    r.innerText = "レア！";
+    r.classList.add("rare1");
+  } else if (rareCount === 2) {
+    r.innerText = "スーパーレア！";
+    r.classList.add("super");
+  } else if (rareCount === 3) {
+    r.innerText = "ハイパーレア！";
+    r.classList.add("hyper");
+  } else if (rareCount >= 4) {
+    r.innerText = "ウルトラレア！！";
+    r.classList.add("ultra");
+  } else {
+    r.innerText = "";
+  }
 }
 
 function start() {
@@ -126,14 +183,7 @@ function start() {
   document.getElementById("loading").classList.remove("hidden");
 
   setTimeout(() => {
-    const text =
-      random(whenList) + "、" +
-      random(whereList) +
-      random(whoList) +
-      random(whatList);
-
-    document.getElementById("text").innerText = text;
-
+    generate();
     document.getElementById("loading").classList.add("hidden");
     document.getElementById("result").classList.remove("hidden");
   }, 3000);
@@ -142,7 +192,83 @@ function start() {
 function copyText() {
   const text = document.getElementById("text").innerText;
   navigator.clipboard.writeText(text);
-  alert("コピーしました！");
+  alert("コピーしたよ！");
+}
+
+// ===== 占い =====
+const fortunes = {
+  daikichi: {
+    name: "大吉",
+    class: "daikichi",
+    msgs: [
+      "理由は特にない",
+      "魔法に目覚めるかも？",
+      "今宵は星が綺麗でしょう"
+    ]
+  },
+  chukichi: {
+    name: "中吉",
+    class: "chukichi",
+    msgs: [
+      "空が青いから",
+      "海が続いているから",
+      "光魔法を浴びたい"
+    ]
+  },
+  shokichi: {
+    name: "小吉",
+    class: "shokichi",
+    msgs: [
+      "言いたいことは言おう",
+      "おいしいご飯を食べよう",
+      "たくさん寝よう"
+    ]
+  },
+  kyo: {
+    name: "凶",
+    class: "kyo",
+    msgs: [
+      "そんな日もあるさ",
+      "魔防を高くしていこう",
+      "ここから上がるしかない"
+    ]
+  }
+};
+
+const specialFortune = [
+  { name: "フブ吉", msg: "魔力の高い一日になるでしょう" },
+  { name: "大凶", msg: "魔王軍の襲来に注意！" }
+];
+
+function openFortune() {
+  document.getElementById("home").classList.add("hidden");
+  document.getElementById("fortune").classList.remove("hidden");
+
+  const title = document.getElementById("fortuneTitle");
+  const msg = document.getElementById("fortuneMsg");
+
+  title.className = "";
+
+  if (Math.random() < 0.05) {
+    const sp = specialFortune[Math.floor(Math.random() * specialFortune.length)];
+    title.innerText = sp.name;
+    msg.innerText = sp.msg;
+    title.classList.add("special");
+    return;
+  }
+
+  const keys = Object.keys(fortunes);
+  const f = fortunes[keys[Math.floor(Math.random() * keys.length)]];
+  const m = f.msgs[Math.floor(Math.random() * f.msgs.length)];
+
+  title.innerText = f.name;
+  msg.innerText = m;
+  title.classList.add(f.class);
+}
+
+function backHome() {
+  document.getElementById("fortune").classList.add("hidden");
+  document.getElementById("home").classList.remove("hidden");
 }
 </script>
 
