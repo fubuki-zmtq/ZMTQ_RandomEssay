@@ -23,7 +23,7 @@ body {
   border-radius: 20px;
   box-sizing: border-box;
   box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-  width: 540px; /* パソコン向けに横幅を拡大 */
+  width: 540px;
   max-width: 90vw;
   text-align: center;
   transition: width 0.3s ease;
@@ -86,7 +86,6 @@ button:hover {
 .special { color: #38bdf8; }
 
 .log-trigger {
-  margin-top: 20px;
   font-size: 12px;
   color: gray;
   cursor: pointer;
@@ -119,7 +118,7 @@ button:hover {
   transition: 0.4s;
   pointer-events: none;
   font-size: 14px;
-  z-index: 1000;
+  z-index: 3000; /* 全ての手前に表示するため数値を大きく */
 }
 
 .achievement.show { opacity: 1; transform: translateY(0); }
@@ -151,7 +150,7 @@ button:hover {
   max-width: 90vw;
   overflow-y: auto;
   box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-  transform: scale(0.9); /* 少し小さい状態から */
+  transform: scale(0.9);
   opacity: 0;
   animation: smoothIn 0.25s ease-out forwards;
 }
@@ -249,6 +248,11 @@ button:hover {
     <button onclick="openFortune()" style="background:#64748b;">今日の運勢を見る</button>
   </div>
   <button onclick="openQuiz()" style="background:#10b981; margin-top:15px; width:100%;">ZMTQuizに挑戦する</button>
+  
+  <div style="display: flex; gap: 20px; justify-content: center; margin-top: 20px;">
+    <div class="log-trigger" onclick="openLog()">ログを確認する</div>
+    <div class="log-trigger" onclick="openAchievements()">解除した実績</div>
+  </div>
 </div>
 
 <div id="loading" class="card hidden">
@@ -271,45 +275,61 @@ button:hover {
   <button onclick="backHome()">戻る</button>
 </div>
 
-<div class="log-trigger" onclick="openLog()">ログを確認する</div>
-
 <div id="logModal" class="logModal hidden">
   <div class="outer-close-btn" onclick="closeLog()">✕</div>
   <div class="logBox log-box-style">
     <h3 style="margin-top:0;">観測ログ</h3>
-    <div id="logContent" style="font-size:14px; line-height:1.6;"></div>
+    <div id="logContent" style="font-size:14px; line-height:1.6; text-align:left;"></div>
+  </div>
+</div>
+
+<div id="achievementsModal" class="logModal hidden">
+  <div class="outer-close-btn" onclick="closeAchievements()">✕</div>
+  <div class="logBox log-box-style">
+    <h3 style="margin-top:0;">実績一覧</h3>
+    <div id="achievementsContent" style="font-size:14px; line-height:1.6; text-align:left;"></div>
   </div>
 </div>
 
 <div id="quizModal" class="logModal hidden">
   <div class="outer-close-btn" id="quizCloseBtn" onclick="closeQuiz()">✕</div>
   <div class="logBox quiz-box-style" id="quizBox">
-    
     <div id="quizQuestionArea">
       <h3 id="quizTitle" style="margin-top:0; color:#6366f1;"></h3>
       <div id="quizOptions"></div>
     </div>
-
     <div id="quizTransitionArea" class="hidden fade-transition" style="text-align: center; padding: 30px 0;">
       <h2>お疲れさまでした！</h2>
       <p class="note">結果を集計中…</p>
     </div>
-
     <div id="quizResultArea" class="hidden fade-transition" style="text-align: center;">
       <div class="quiz-result-title">クイズ結果</div>
       <p style="font-size: 16px; margin: 25px 0;">あなたの正答数は<br><span id="quizScoreDisplay" style="font-size: 32px; color: #10b981; font-weight:bold;"></span> <span style="font-size:18px;">問 / 5問中</span></p>
       <button onclick="closeQuizResult()" style="width:100%;">ホームに戻る</button>
     </div>
-
   </div>
 </div>
 
 <div id="achievement" class="achievement"></div>
 
 <script>
+// ===== 実績の全体定義 =====
+const ALL_ACHIEVEMENTS = {
+  "生成": ["初めて生成した", "10回生成した", "100回生成した"],
+  "レアリティ": ["レアを引いた", "スーパーレアを引いた", "ハイパーレアを引いた", "ウルトラレアを引いた"],
+  "占い": ["初めて占った", "10回占った", "フブ吉を引いた", "大凶を引いた"],
+  "クイズ": ["クイズ全問正解"],
+  "特殊・ログ": ["初めてログが記録された", "ログに10回記録された", "僕らだけのハッピーエンド？", "僕らだけのパーリナイ"],
+  "コンプリート": ["実績を全て解除した"]
+};
+
+// 全実績の数を計算（オブジェクトの中身を平坦化してカウント）
+const TOTAL_ACHIEVEMENT_COUNT = Object.values(ALL_ACHIEVEMENTS).flat().length;
+
 // ===== 状態管理 =====
 let genCount = 0;
 let fortuneCount = 0;
+let partyCount = 0; // 追加：楽しげな雰囲気の累計回数
 let unlocked = new Set();
 let logs = [];
 
@@ -319,6 +339,7 @@ function loadData() {
     const data = JSON.parse(saved);
     genCount = data.genCount || 0;
     fortuneCount = data.fortuneCount || 0;
+    partyCount = data.partyCount || 0;
     logs = data.logs || [];
     unlocked = new Set(data.unlocked || []);
   }
@@ -328,6 +349,7 @@ function saveData() {
   const data = {
     genCount,
     fortuneCount,
+    partyCount,
     logs,
     unlocked: Array.from(unlocked)
   };
@@ -380,6 +402,7 @@ function generate() {
   if (rareCount === 3) unlock("ハイパーレアを引いた");
   if (rareCount >= 4) unlock("ウルトラレアを引いた");
 
+  // 通常ログ
   if (current.when.includes("千年前")) addLog("古き時代を感知");  
   if (current.where.includes("月")) addLog("異常領域：月面反応あり");
   if (current.who.includes("勇者")) addLog("勇者を確認");
@@ -390,15 +413,20 @@ function generate() {
   if (current.what.includes("記憶")) addLog("記憶の断片を検知");
   if (current.what.includes("扉をぶち壊した")) addLog("扉の破片を検知");
   
+  // パーティ系の処理
   if (current.what.includes("パーティーをした") || current.what.includes("歌い出した") || current.what.includes("踊り出した")) {
     addLog("楽しげな雰囲気を感知");
+    partyCount++;
+    if (partyCount >= 10) unlock("僕らだけのパーリナイ");
   }
 
+  // 複合条件のログ＆実績
   if (current.when.includes("千年前") && current.who.includes("古代勇者")) {
     addLog("伝説の旅を検出");
   }
   if (current.who.includes("神王グゴール") && current.what.includes("爆発した")) {
     addLog("神王爆破により物語終了");
+    unlock("僕らだけのハッピーエンド？");
   }
   if (current.who.includes("參ノ護王") && current.what.includes("お団子を食べた")) {
     addLog("魔王の主食を検出");
@@ -481,18 +509,34 @@ function backHome() {
   document.getElementById("home").classList.remove("hidden");
 }
 
+// ===== 実績解除の共通処理 =====
 function unlock(name) {
   if (unlocked.has(name)) return;
   unlocked.add(name);
+  
   const el = document.getElementById("achievement");
   el.innerText = `🏆 実績解除：${name}`;
   el.classList.add("show");
+  
   setTimeout(() => { el.classList.remove("show"); }, 2000);
   saveData();
+
+  // 「コンプリート実績」以外の実績が全て解除されたかを判定
+  if (name !== "実績を全て解除した") {
+    // 自身(コンプリート)を除いた総数と同じなら、全て集まったとみなす
+    if (unlocked.size === TOTAL_ACHIEVEMENT_COUNT - 1) {
+      setTimeout(() => {
+        unlock("実績を全て解除した");
+      }, 2500); // 前のポップアップが消えた直後に表示
+    }
+  }
 }
 
+// ===== ログ・実績表示 =====
 function addLog(text) {
   logs.push(text);
+  if (logs.length === 1) unlock("初めてログが記録された");
+  if (logs.length === 10) unlock("ログに10回記録された");
   saveData();
 }
 
@@ -505,6 +549,37 @@ function openLog() {
 
 function closeLog() {
   document.getElementById("logModal").classList.add("hidden");
+}
+
+function openAchievements() {
+  const modal = document.getElementById("achievementsModal");
+  const box = document.getElementById("achievementsContent");
+  
+  let html = "";
+  
+  // 達成率の計算
+  const progressPercent = Math.floor((unlocked.size / TOTAL_ACHIEVEMENT_COUNT) * 100);
+  html += `<div style="text-align:center; font-size:16px; font-weight:bold; color:#10b981; margin-bottom:15px;">達成率: ${progressPercent}% (${unlocked.size} / ${TOTAL_ACHIEVEMENT_COUNT})</div>`;
+
+  // カテゴリごとに実績を描画
+  for (const [category, achList] of Object.entries(ALL_ACHIEVEMENTS)) {
+    html += `<h4 style="margin: 15px 0 5px 0; color: #6366f1; border-bottom: 2px solid #e2e8f0; padding-bottom: 3px;">【${category}】</h4>`;
+    
+    achList.forEach(ach => {
+      if (unlocked.has(ach)) {
+        html += `<div style="padding: 5px 0; color: #333; font-weight:bold;">🏆 ${ach}</div>`;
+      } else {
+        html += `<div style="padding: 5px 0; color: #94a3b8;">🔒 ？？？</div>`;
+      }
+    });
+  }
+
+  box.innerHTML = html;
+  modal.classList.remove("hidden");
+}
+
+function closeAchievements() {
+  document.getElementById("achievementsModal").classList.add("hidden");
 }
 
 // ===== ZMTQuiz =====
