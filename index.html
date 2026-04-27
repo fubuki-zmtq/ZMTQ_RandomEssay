@@ -23,9 +23,10 @@ body {
   border-radius: 20px;
   box-sizing: border-box;
   box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-  width: 360px;
+  width: 540px; /* パソコン向けに横幅を拡大 */
   max-width: 90vw;
   text-align: center;
+  transition: width 0.3s ease;
 }
 
 button {
@@ -96,10 +97,11 @@ button:hover {
   color: #6366f1;
 }
 
+/* スマホ向けのレイアウト調整 */
 @media (max-width: 600px) {
   body { padding: 10px; height: auto; }
   .card { width: 100%; padding: 25px; }
-  h1 { font-size: 22px; }
+  h1 { font-size: 20px; }
   .result { font-size: 16px; }
   button { width: 100%; margin-top: 12px; }
 }
@@ -126,7 +128,7 @@ button:hover {
 .logModal {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0,0,0,0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -139,67 +141,68 @@ button:hover {
   to { opacity: 1; }
 }
 
-/* ポップアップの基本スタイル */
+/* ポップアップのアニメーション（スッと出るタイプ） */
 .logBox {
-  position: relative; /* ✕ボタンの基準位置にするため追加 */
+  position: relative;
   background: white;
-  padding: 30px 25px 25px 25px; /* 上部に✕ボタンの余白を少し確保 */
+  padding: 30px;
   border-radius: 15px;
-  box-sizing: border-box; /* これで余白を含めてサイズ計算されます */
+  box-sizing: border-box;
   max-width: 90vw;
   overflow-y: auto;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
-  transform: scale(0);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+  transform: scale(0.9); /* 少し小さい状態から */
   opacity: 0;
-  animation: popScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: smoothIn 0.25s ease-out forwards;
 }
 
-/* ログ画面固有のサイズ調整 */
+@keyframes smoothIn {
+  to { transform: scale(1); opacity: 1; }
+}
+
 .log-box-style {
-  width: 320px;
-  max-height: 60vh; /* 少し短くしました */
+  width: 400px;
+  max-height: 70vh;
 }
 
-/* クイズ画面固有のサイズ調整 */
 .quiz-box-style {
-  width: 500px; /* パソコンで横長になるように拡大 */
-  max-height: 80vh;
+  width: 580px;
+  max-height: 85vh;
 }
 
-/* ✕ボタンのスタイル */
-.close-btn {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 30px;
-  height: 30px;
-  line-height: 30px;
+/* 枠外の✕ボタン */
+.outer-close-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  line-height: 44px;
   text-align: center;
-  font-size: 18px;
-  color: #94a3b8;
+  font-size: 24px;
   cursor: pointer;
   border-radius: 50%;
-  transition: 0.2s;
+  transition: 0.3s;
   user-select: none;
+  z-index: 2100;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.close-btn:hover {
-  background: #f1f5f9;
-  color: #ef4444;
-}
-
-@keyframes popScale {
-  0% { transform: scale(0); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+.outer-close-btn:hover {
+  background: rgba(239, 68, 68, 0.8);
+  transform: rotate(90deg);
 }
 
 /* クイズ用のスタイル */
 .quiz-option {
   display: block;
   width: 100%;
-  box-sizing: border-box; /* これで枠のはみ出しを防ぎます */
+  box-sizing: border-box;
   margin: 10px 0;
-  padding: 12px 15px;
+  padding: 14px 18px;
   background: #f8fafc;
   border: 2px solid #e2e8f0;
   border-radius: 10px;
@@ -223,7 +226,6 @@ button:hover {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 10px;
-  animation: popScale 0.5s ease forwards;
 }
 
 .fade-transition {
@@ -241,9 +243,11 @@ button:hover {
 
 <div id="home" class="card fade-transition">
   <h1>ZMTQランダム作文</h1>
-  <p>「いつ・どこで・誰が・何をした」をランダム生成</p>
-  <button onclick="start()">生成する</button>
-  <button onclick="openFortune()" style="background:#64748b;">今日の運勢を見る</button>
+  <p>「いつ・どこで・誰が・何をした」をランダムに組み合わせて生成します</p>
+  <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+    <button onclick="start()">生成する</button>
+    <button onclick="openFortune()" style="background:#64748b;">今日の運勢を見る</button>
+  </div>
   <button onclick="openQuiz()" style="background:#10b981; margin-top:15px; width:100%;">ZMTQuizに挑戦する</button>
 </div>
 
@@ -270,20 +274,19 @@ button:hover {
 <div class="log-trigger" onclick="openLog()">ログを確認する</div>
 
 <div id="logModal" class="logModal hidden">
+  <div class="outer-close-btn" onclick="closeLog()">✕</div>
   <div class="logBox log-box-style">
-    <div class="close-btn" onclick="closeLog()">✕</div>
     <h3 style="margin-top:0;">観測ログ</h3>
-    <div id="logContent" style="margin-bottom:5px; font-size:14px; line-height:1.6;"></div>
+    <div id="logContent" style="font-size:14px; line-height:1.6;"></div>
   </div>
 </div>
 
 <div id="quizModal" class="logModal hidden">
+  <div class="outer-close-btn" id="quizCloseBtn" onclick="closeQuiz()">✕</div>
   <div class="logBox quiz-box-style" id="quizBox">
     
-    <div class="close-btn" id="quizCloseBtn" onclick="closeQuiz()">✕</div>
-    
     <div id="quizQuestionArea">
-      <h3 id="quizTitle" style="margin-top:0; margin-right:20px; color:#6366f1;"></h3>
+      <h3 id="quizTitle" style="margin-top:0; color:#6366f1;"></h3>
       <div id="quizOptions"></div>
     </div>
 
@@ -304,7 +307,7 @@ button:hover {
 <div id="achievement" class="achievement"></div>
 
 <script>
-// ===== セーブデータ・状態管理 =====
+// ===== 状態管理 =====
 let genCount = 0;
 let fortuneCount = 0;
 let unlocked = new Set();
@@ -333,7 +336,6 @@ function saveData() {
 
 window.onload = loadData;
 
-// ===== 作文データ =====
 const normal = {
   when: ["今日","さっき","昨日","一週間前","三か月前","一年前","十年前","千年前","だいぶ前","いつか分からんけど"],
   where: ["バネッサで","妖精国で","氷河坑道連邦で","獣の国で","世界樹図書館で","東の国で","華都で","ニライカナイで","吸血鬼城で","魔王領で","教団市国で","蒼い月の裏側で","その辺で"],
@@ -378,7 +380,6 @@ function generate() {
   if (rareCount === 3) unlock("ハイパーレアを引いた");
   if (rareCount >= 4) unlock("ウルトラレアを引いた");
 
-  // ログチェック
   if (current.when.includes("千年前")) addLog("古き時代を感知");  
   if (current.where.includes("月")) addLog("異常領域：月面反応あり");
   if (current.who.includes("勇者")) addLog("勇者を確認");
@@ -393,7 +394,6 @@ function generate() {
     addLog("楽しげな雰囲気を感知");
   }
 
-  // 複合条件
   if (current.when.includes("千年前") && current.who.includes("古代勇者")) {
     addLog("伝説の旅を検出");
   }
@@ -435,7 +435,6 @@ function copyText() {
   alert("コピーしたよ！");
 }
 
-// ===== 占い =====
 const fortunes = {
   daikichi: { name: "大吉", class: "daikichi", msgs: ["理由は特にない", "魔法に目覚めるかも？", "今宵は星が綺麗でしょう"] },
   chukichi: { name: "中吉", class: "chukichi", msgs: ["空が青いから", "海が続いているから", "光魔法を浴びたい"] },
@@ -492,7 +491,6 @@ function unlock(name) {
   saveData();
 }
 
-// ===== ログ =====
 function addLog(text) {
   logs.push(text);
   saveData();
@@ -501,8 +499,7 @@ function addLog(text) {
 function openLog() {
   const modal = document.getElementById("logModal");
   const box = document.getElementById("logContent");
-  box.innerHTML = logs.length ? logs.map(l => `<div style="border-bottom:1px dashed #e2e8f0; padding:5px 0;">・${l}</div>`).join("") : "ログはありません";
-  
+  box.innerHTML = logs.length ? logs.map(l => `<div style="border-bottom:1px dashed #e2e8f0; padding:8px 0;">・${l}</div>`).join("") : "ログはまだ記録されていません";
   modal.classList.remove("hidden");
 }
 
@@ -525,14 +522,10 @@ let currentScore = 0;
 function openQuiz() {
   currentQuizIndex = 0;
   currentScore = 0;
-  
   document.getElementById("quizQuestionArea").classList.remove("hidden");
   document.getElementById("quizTransitionArea").classList.add("hidden");
   document.getElementById("quizResultArea").classList.add("hidden");
-  
-  // 開始時は✕ボタンを表示
   document.getElementById("quizCloseBtn").classList.remove("hidden");
-  
   renderQuestion();
   document.getElementById("quizModal").classList.remove("hidden");
 }
@@ -565,9 +558,7 @@ function handleAnswer(selectedIndex) {
   if (selectedIndex === correctIndex) {
     currentScore++;
   }
-
   currentQuizIndex++;
-
   if (currentQuizIndex < quizData.length) {
     renderQuestion();
   } else {
@@ -579,25 +570,20 @@ function finishQuiz() {
   document.getElementById("quizQuestionArea").classList.add("hidden");
   const transArea = document.getElementById("quizTransitionArea");
   transArea.classList.remove("hidden");
-  
-  // 結果集計中は✕ボタンを非表示にする
   document.getElementById("quizCloseBtn").classList.add("hidden");
 
   setTimeout(() => {
     transArea.classList.add("hidden");
     document.getElementById("quizScoreDisplay").innerText = currentScore;
     document.getElementById("quizResultArea").classList.remove("hidden");
-    
     if(currentScore === 5) unlock("クイズ全問正解");
   }, 1500);
 }
 
-// クイズ中断用の閉じる処理
 function closeQuiz() {
   document.getElementById("quizModal").classList.add("hidden");
 }
 
-// クイズ完了時の「ホームに戻る」ボタン用の処理
 function closeQuizResult() {
   document.getElementById("quizModal").classList.add("hidden");
 }
