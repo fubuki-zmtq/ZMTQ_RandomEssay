@@ -21,6 +21,7 @@ body {
   background: white;
   padding: 40px;
   border-radius: 20px;
+  box-sizing: border-box;
   box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   width: 360px;
   max-width: 90vw;
@@ -138,20 +139,53 @@ button:hover {
   to { opacity: 1; }
 }
 
-/* ポップアップのスタイリッシュな出現アニメーション */
+/* ポップアップの基本スタイル */
 .logBox {
+  position: relative; /* ✕ボタンの基準位置にするため追加 */
   background: white;
-  padding: 25px;
+  padding: 30px 25px 25px 25px; /* 上部に✕ボタンの余白を少し確保 */
   border-radius: 15px;
-  width: 320px;
+  box-sizing: border-box; /* これで余白を含めてサイズ計算されます */
   max-width: 90vw;
-  max-height: 80vh;
   overflow-y: auto;
   box-shadow: 0 15px 40px rgba(0,0,0,0.2);
-  /* 点からフワッと広がり、少し弾む設定 */
   transform: scale(0);
   opacity: 0;
   animation: popScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* ログ画面固有のサイズ調整 */
+.log-box-style {
+  width: 320px;
+  max-height: 60vh; /* 少し短くしました */
+}
+
+/* クイズ画面固有のサイズ調整 */
+.quiz-box-style {
+  width: 500px; /* パソコンで横長になるように拡大 */
+  max-height: 80vh;
+}
+
+/* ✕ボタンのスタイル */
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+  font-size: 18px;
+  color: #94a3b8;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: 0.2s;
+  user-select: none;
+}
+
+.close-btn:hover {
+  background: #f1f5f9;
+  color: #ef4444;
 }
 
 @keyframes popScale {
@@ -163,6 +197,7 @@ button:hover {
 .quiz-option {
   display: block;
   width: 100%;
+  box-sizing: border-box; /* これで枠のはみ出しを防ぎます */
   margin: 10px 0;
   padding: 12px 15px;
   background: #f8fafc;
@@ -178,7 +213,7 @@ button:hover {
 .quiz-option:hover {
   background: #eef2ff;
   border-color: #6366f1;
-  transform: translateX(5px); /* 右に少しスライド */
+  transform: translateX(5px);
 }
 
 .quiz-result-title {
@@ -235,18 +270,20 @@ button:hover {
 <div class="log-trigger" onclick="openLog()">ログを確認する</div>
 
 <div id="logModal" class="logModal hidden">
-  <div class="logBox">
+  <div class="logBox log-box-style">
+    <div class="close-btn" onclick="closeLog()">✕</div>
     <h3 style="margin-top:0;">観測ログ</h3>
-    <div id="logContent" style="margin-bottom:15px; font-size:14px; line-height:1.6;"></div>
-    <button onclick="closeLog()" style="width:100%; background:#64748b;">閉じる</button>
+    <div id="logContent" style="margin-bottom:5px; font-size:14px; line-height:1.6;"></div>
   </div>
 </div>
 
 <div id="quizModal" class="logModal hidden">
-  <div class="logBox" id="quizBox">
+  <div class="logBox quiz-box-style" id="quizBox">
+    
+    <div class="close-btn" id="quizCloseBtn" onclick="closeQuiz()">✕</div>
     
     <div id="quizQuestionArea">
-      <h3 id="quizTitle" style="margin-top:0; color:#6366f1;"></h3>
+      <h3 id="quizTitle" style="margin-top:0; margin-right:20px; color:#6366f1;"></h3>
       <div id="quizOptions"></div>
     </div>
 
@@ -258,7 +295,7 @@ button:hover {
     <div id="quizResultArea" class="hidden fade-transition" style="text-align: center;">
       <div class="quiz-result-title">クイズ結果</div>
       <p style="font-size: 16px; margin: 25px 0;">あなたの正答数は<br><span id="quizScoreDisplay" style="font-size: 32px; color: #10b981; font-weight:bold;"></span> <span style="font-size:18px;">問 / 5問中</span></p>
-      <button onclick="closeQuiz()" style="width:100%;">ホームに戻る</button>
+      <button onclick="closeQuizResult()" style="width:100%;">ホームに戻る</button>
     </div>
 
   </div>
@@ -489,10 +526,12 @@ function openQuiz() {
   currentQuizIndex = 0;
   currentScore = 0;
   
-  // 各エリアの表示リセット
   document.getElementById("quizQuestionArea").classList.remove("hidden");
   document.getElementById("quizTransitionArea").classList.add("hidden");
   document.getElementById("quizResultArea").classList.add("hidden");
+  
+  // 開始時は✕ボタンを表示
+  document.getElementById("quizCloseBtn").classList.remove("hidden");
   
   renderQuestion();
   document.getElementById("quizModal").classList.remove("hidden");
@@ -503,10 +542,9 @@ function renderQuestion() {
   const title = document.getElementById("quizTitle");
   const optionsBox = document.getElementById("quizOptions");
   
-  // ふんわり切り替わるようにアニメーション用のクラスを付け直す
   title.classList.remove("fade-transition");
   optionsBox.classList.remove("fade-transition");
-  void title.offsetWidth; // アニメーションリセットのためのトリック
+  void title.offsetWidth; 
   title.classList.add("fade-transition");
   optionsBox.classList.add("fade-transition");
 
@@ -541,19 +579,26 @@ function finishQuiz() {
   document.getElementById("quizQuestionArea").classList.add("hidden");
   const transArea = document.getElementById("quizTransitionArea");
   transArea.classList.remove("hidden");
+  
+  // 結果集計中は✕ボタンを非表示にする
+  document.getElementById("quizCloseBtn").classList.add("hidden");
 
-  // 1.5秒待ってから結果画面へ
   setTimeout(() => {
     transArea.classList.add("hidden");
     document.getElementById("quizScoreDisplay").innerText = currentScore;
     document.getElementById("quizResultArea").classList.remove("hidden");
     
-    // 全問正解の実績（おまけ）
     if(currentScore === 5) unlock("クイズ全問正解");
   }, 1500);
 }
 
+// クイズ中断用の閉じる処理
 function closeQuiz() {
+  document.getElementById("quizModal").classList.add("hidden");
+}
+
+// クイズ完了時の「ホームに戻る」ボタン用の処理
+function closeQuizResult() {
   document.getElementById("quizModal").classList.add("hidden");
 }
 </script>
