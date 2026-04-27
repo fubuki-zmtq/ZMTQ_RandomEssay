@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta charset="UTF-8">
 <title>ZMTQランダム作文</title>
 
@@ -21,6 +22,7 @@ body {
   border-radius: 20px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   width: 360px;
+  max-width: 90vw; /* ←これ追加 */
   text-align: center;
 }
 
@@ -79,6 +81,31 @@ button:hover {
 .shokichi { color: orange; }
 .kyo { color: purple; }
 .special { color: #38bdf8; }
+
+@media (max-width: 600px) {
+  body {
+    padding: 10px;
+    height: auto;
+  }
+
+  .card {
+    width: 100%;
+    padding: 25px;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+
+  .result {
+    font-size: 16px;
+  }
+
+  button {
+    width: 100%;
+    margin-top: 12px;
+  }
+}
 </style>
 
 </head>
