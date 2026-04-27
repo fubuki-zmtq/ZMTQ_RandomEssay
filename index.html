@@ -261,6 +261,10 @@ function generate() {
   if (current.what.includes("クレープ")) addLog("クレープ摂取済み");
   if (current.what.includes("記憶")) addLog("記憶の断片を検知");
   if (current.where.includes("月")) addLog("異常領域：月面反応あり");
+  if (current.where.includes("護王")) addLog("種族の長を確認");
+  if (current.where.includes("歌い出した")) addLog("誰かの歌を検知");
+  if (current.where.includes("神王グゴール")) addLog("神？を確認");
+  if (current.where.includes("千年前")) addLog("古代反応あり");
   
   saveData();
 }
