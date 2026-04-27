@@ -256,16 +256,22 @@ function generate() {
   if (rareCount >= 4) unlock("ウルトラレアを引いた");
 
   // ログチェック
+  // when (いつ) をチェック
+  if (current.when.includes("千年前")) addLog("古き時代を感知");  
+  // where（どこで）をチェック
+  if (current.where.includes("月")) addLog("異常領域：月面反応あり");
+  // who (誰が) をチェック
   if (current.who.includes("勇者")) addLog("勇者を確認");
+  if (current.who.includes("護王")) addLog("種族の長を確認");
+  if (current.who.includes("神王グゴール")) addLog("神？を確認");
+  // what（何をした）をチェック
   if (current.what.includes("爆発")) addLog("爆発を検知");
   if (current.what.includes("クレープ")) addLog("クレープ摂取済み");
   if (current.what.includes("記憶")) addLog("記憶の断片を検知");
-  if (current.where.includes("月")) addLog("異常領域：月面反応あり");
-  if (current.where.includes("護王")) addLog("種族の長を確認");
-  if (current.where.includes("歌い出した")) addLog("誰かの歌を検知");
-  if (current.where.includes("神王グゴール")) addLog("神？を確認");
-  if (current.where.includes("千年前")) addLog("古代反応あり");
-  
+  if (current.what.includes("パーティーをした") || current.what.includes("歌い出した") || current.what.includes("踊り出した")) {
+  addLog("楽しげな雰囲気を感知");
+  }
+    
   saveData();
 }
 
