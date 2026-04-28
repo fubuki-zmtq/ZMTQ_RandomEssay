@@ -15,6 +15,7 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  overflow-y: scroll; /* スクロールバーを常に表示して横ズレを防ぐ */
 }
 
 .card {
@@ -26,7 +27,6 @@ body {
   width: 540px;
   max-width: 90vw;
   text-align: center;
-  transition: width 0.3s ease;
 }
 
 button {
@@ -71,7 +71,7 @@ button:hover {
 .rare1 { color: blue; }
 
 .daikichi { color: gold; }
-.chukichi { color: green; }
+.chukichi { green; }
 .shokichi { color: orange; }
 .kyo { color: purple; }
 .special { color: #38bdf8; }
@@ -721,7 +721,6 @@ function generate() {
     unlock("護王も歩けば転ぶ");
   }
   
-  // 修正箇所：変数名を分けてエラーを防ぎました
   const isMuscleWho = current.who.includes("古代勇者") || current.who.includes("戦士");
   const isMuscleWhat = isPartyWhat || current.what.includes("爆発した") || current.what.includes("扉をぶち壊した");
   if (current.where.includes("氷河坑道連邦") && isMuscleWho && isMuscleWhat) {
