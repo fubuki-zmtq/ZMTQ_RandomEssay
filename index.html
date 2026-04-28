@@ -97,6 +97,44 @@ button:hover {
 }
 .menu-btn:hover { background: #e2e8f0; transform: translateY(-2px); }
 
+/* トグルスイッチのスタイル */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #cbd5e1;
+  transition: .4s;
+  border-radius: 24px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+input:checked + .slider {
+  background-color: #10b981;
+}
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
 /* 通知と実績の基本設定（PC・スマホ共通） */
 .achievement {
   position: fixed;
@@ -301,12 +339,24 @@ button:hover {
 <div id="home" class="card fade-transition">
   <h1>ZMTQランダム作文</h1>
   <p>「いつ・どこで・誰が・何をした」をランダムに組み合わせて生成します</p>
+  
   <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
     <button onclick="start()">生成する</button>
     <button onclick="openFortune()" style="background:#64748b;">今日の運勢を見る</button>
   </div>
   <button onclick="openQuiz()" style="background:#10b981; margin-top:15px; width:100%;">ZMTQuizに挑戦する</button>
   
+  <div style="margin-top: 25px; padding: 15px; background: #f8fafc; border-radius: 10px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="text-align: left;">
+      <div style="font-size: 14px; font-weight: bold; color: #334155;">ネタバレ防止モード</div>
+      <div style="font-size: 11px; color: #64748b; margin-top: 2px;">物語の核心に関わる単語を非表示にします</div>
+    </div>
+    <label class="toggle-switch">
+      <input type="checkbox" id="spoilerToggle" onchange="handleSpoilerToggle(this)">
+      <span class="slider"></span>
+    </label>
+  </div>
+
   <div style="display: flex; gap: 20px; justify-content: center; margin-top: 20px;">
     <div class="log-trigger" onclick="openLog()">ログを確認する</div>
     <div class="log-trigger" onclick="openAchievements()">解除した実績</div>
@@ -361,6 +411,17 @@ button:hover {
   </div>
 </div>
 
+<div id="spoilerConfirmModal" class="logModal hidden">
+  <div class="logBox log-box-style" style="width: 320px; text-align: center;">
+    <h3 style="margin-top:0; color:#ef4444;">モード切替の確認</h3>
+    <p id="spoilerConfirmMsg" style="font-size: 14px; color: #333; margin-bottom: 25px; line-height: 1.6;"></p>
+    <div style="display: flex; gap: 10px;">
+      <button id="spoilerConfirmBtn" style="flex: 1; margin: 0; background: #ef4444;">切り替える</button>
+      <button onclick="cancelSpoilerToggle()" style="flex: 1; margin: 0; background: #94a3b8;">キャンセル</button>
+    </div>
+  </div>
+</div>
+
 <div id="quizModal" class="logModal hidden">
   <div class="outer-close-btn" id="quizCloseBtn" onclick="closeModal('quizModal')">✕</div>
   <div class="logBox quiz-box-style" id="quizBox">
@@ -388,7 +449,7 @@ button:hover {
 // 🔧 カスタマイズエリア：更新情報の追加
 // ==========================================
 const updateNewsList = [
-  { date: "2026/04/28", text: "諸々のバグを直しました。過去に条件を満たし、まだ通知されていない新しい実績がある場合、次に「生成する」や「占い」を押したときにまとめて実績解除の通知がやってくるかもしれません。" },
+  { date: "2026/04/28", text: "初見の方でも安心して遊べるように「ネタバレ防止モード」を追加しました。" },
   { date: "2026/04/28", text: "単語の追加と、新しい特殊実績を実装しました。ぜひ集めてみてください！" },
   { date: "2026/04/28", text: "実績の追加、実績画面での達成条件表示、ログ通知機能、更新情報ページを実装しました。" },
   { date: "2026/04/27", text: "ZMTQuizを実装しました。全問正解を目指してみてください！" },
@@ -471,11 +532,23 @@ const ALL_ACHIEVEMENTS = {
   ]
 };
 
+// ==========================================
+// 🔧 ネタバレとして扱う単語の定義
+// ==========================================
+const SPOILER_WORDS = [
+  "蒼い月の裏側で",
+  "神王グゴールが",
+  "弐ノ護王が",
+  "肆ノ護王が",
+  "記憶を取り戻した",
+  "現界した",
+  "人類が滅ぶ前"
+];
+
 // ------------------------------------------------------------------
 // 以下、システムの中核プログラムです
 // ------------------------------------------------------------------
 
-// 修正ポイント：現在の公式リストにある実績名のみを抽出して正解リストを作ります
 const VALID_CORE_ACHIEVEMENTS = new Set(
   Object.values(ALL_ACHIEVEMENTS)
     .filter((_, i, arr) => i !== arr.length - 1)
@@ -492,6 +565,7 @@ let unlocked = new Set();
 let logs = [];
 let achievementQueue = [];
 let isShowingAchievement = false;
+let isSpoilerMode = false; // ネタバレ防止モードの状態
 
 function loadData() {
   const saved = localStorage.getItem('zmtq_save_data');
@@ -503,13 +577,18 @@ function loadData() {
     explosionCount = data.explosionCount || 0;
     logs = data.logs || [];
     unlocked = new Set(data.unlocked || []);
+    isSpoilerMode = data.isSpoilerMode || false;
   }
+  
+  // トグルスイッチに状態を反映
+  document.getElementById("spoilerToggle").checked = isSpoilerMode;
 }
 
 function saveData() {
   const data = {
     genCount, fortuneCount, partyCount, explosionCount,
-    logs, unlocked: Array.from(unlocked)
+    logs, unlocked: Array.from(unlocked),
+    isSpoilerMode
   };
   localStorage.setItem('zmtq_save_data', JSON.stringify(data));
 }
@@ -519,9 +598,65 @@ window.onload = loadData;
 let rareCount = 0;
 
 function pick(type) {
-  if (Math.random() < 0.05) { rareCount++; return rare[type][0]; }
-  const pool = normal[type];
+  let pool = normal[type];
+  let isRarePicked = false;
+
+  if (Math.random() < 0.05) {
+    pool = rare[type];
+    isRarePicked = true;
+  }
+
+  // ネタバレ防止モードがオンの時の除外処理
+  if (isSpoilerMode) {
+    let safePool = pool.filter(word => !SPOILER_WORDS.includes(word));
+    // レア枠が除外されて空っぽになってしまった場合は、通常枠から選び直す
+    if (safePool.length === 0) {
+      safePool = normal[type].filter(word => !SPOILER_WORDS.includes(word));
+      isRarePicked = false;
+    }
+    pool = safePool;
+  }
+
+  if (isRarePicked) {
+    rareCount++;
+  }
+  
   return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ネタバレ防止モードのUI制御
+function handleSpoilerToggle(checkbox) {
+  const wantToTurnOn = checkbox.checked;
+  // 確認が終わるまでは見た目を元に戻す
+  checkbox.checked = !wantToTurnOn;
+
+  const msgEl = document.getElementById("spoilerConfirmMsg");
+  const btnEl = document.getElementById("spoilerConfirmBtn");
+
+  if (wantToTurnOn) {
+    msgEl.innerText = "ネタバレ防止モードをオンにします。このモードをオンにすると一部の実績が達成できなくなりますがよろしいですか？";
+    btnEl.innerText = "オンにする";
+    btnEl.style.background = "#10b981";
+    btnEl.onclick = () => confirmSpoilerToggle(true);
+  } else {
+    msgEl.innerText = "ネタバレ防止モードをオフにします。よろしいですか？";
+    btnEl.innerText = "オフにする";
+    btnEl.style.background = "#ef4444";
+    btnEl.onclick = () => confirmSpoilerToggle(false);
+  }
+  
+  document.getElementById("spoilerConfirmModal").classList.remove("hidden");
+}
+
+function confirmSpoilerToggle(turnOn) {
+  isSpoilerMode = turnOn;
+  document.getElementById("spoilerToggle").checked = turnOn;
+  saveData();
+  closeModal('spoilerConfirmModal');
+}
+
+function cancelSpoilerToggle() {
+  closeModal('spoilerConfirmModal');
 }
 
 function generate() {
@@ -586,7 +721,7 @@ function generate() {
   }
   
   const isSoreWho = current.who.includes("勇者") || current.who.includes("魔王軍四天王");
-  const isSoreWhat = isPartyWhat || current.what.includes("お昼寝した") || current.what.includes("ピクニックをした") || current.what.includes("お団子を食べた") || current.what.includes("タイ借で競った");
+  const isSoreWhat = isPartyWhat || current.what.includes("お昼寝した") || current.what.includes("ピクニックをした") || current.what.includes("お団子を食べた") || current.what.includes("タイピングで競った");
   if (current.where.includes("蒼い月の裏側") && isSoreWho && isSoreWhat) {
     unlock("それどころではない");
   }
@@ -677,7 +812,6 @@ function showNextAchievement() {
   }, 2500);
 }
 
-// 修正ポイント：現在有効な実績の数だけを数えます
 function checkCompletion() {
   let currentCoreCount = 0;
   for(let item of unlocked) {
@@ -715,7 +849,6 @@ function openLog() {
   document.getElementById("logModal").classList.remove("hidden");
 }
 
-// 修正ポイント：実績画面を開いたときも現在有効な実績だけを基準にパーセンテージを計算します
 function openAchievements() {
   const box = document.getElementById("achievementsContent");
   
