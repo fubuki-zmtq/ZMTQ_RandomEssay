@@ -717,7 +717,11 @@ function generate() {
   if (current.who.includes("護王") && current.what.includes("転んだ")) {
     unlock("護王も歩けば転ぶ");
   }
-  if (current.where.includes("氷河坑道連邦") && current.who.includes("古代勇者") || current.who.includes("戦士") && (current.what.includes("爆発した") || current.what.includes("扉をぶち壊した"))) {
+  
+  const isSoreWho = current.who.includes("古代勇者") || current.who.includes("戦士");
+  const isSoreWhat = isPartyWhat || current.what.includes("爆発した") || current.what.includes("扉をぶち壊した");
+  if (current.where.includes("氷河坑道連邦") && isSoreWho && isSoreWhat) {
+    addLog("氷河坑道の破壊を検知");
     unlock("何やっとんじゃこの筋肉達磨ァッ！！！！");
   }
   
