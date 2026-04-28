@@ -103,44 +103,69 @@ button:hover {
   h1 { font-size: 20px; }
   .result { font-size: 16px; }
   button { width: 100%; margin-top: 12px; }
+
+  /* 実績ポップアップ：スマホでは画面下部の中央から出現 */
+  .achievement {
+    right: auto;
+    left: 50%;
+    bottom: 20px;
+    transform: translate(-50%, 20px);
+    white-space: nowrap;
+  }
+  .achievement.show {
+    transform: translate(-50%, 0);
+  }
+
+  /* ログ通知：スマホでは画面上部の中央から出現 */
+  .log-notification {
+    left: 50%;
+    bottom: auto;
+    top: 20px;
+    transform: translate(-50%, -20px);
+    white-space: nowrap;
+  }
+  .log-notification.show {
+    transform: translate(-50%, 0);
+  }
 }
 
-/* 実績ポップアップ（右下） */
-.achievement {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #111;
-  color: white;
-  padding: 12px 18px;
-  border-radius: 10px;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: 0.4s;
-  pointer-events: none;
-  font-size: 14px;
-  z-index: 3000;
-}
-.achievement.show { opacity: 1; transform: translateY(0); }
+/* パソコン用の基本設定 */
+@media (min-width: 601px) {
+  .achievement {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #111;
+    color: white;
+    padding: 12px 18px;
+    border-radius: 10px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: 0.4s;
+    pointer-events: none;
+    font-size: 14px;
+    z-index: 3000;
+  }
+  .achievement.show { opacity: 1; transform: translateY(0); }
 
-/* ログ通知ポップアップ（左下） */
-.log-notification {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  background: rgba(99, 102, 241, 0.95);
-  color: white;
-  padding: 10px 16px;
-  border-radius: 8px;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: 0.4s;
-  pointer-events: none;
-  font-size: 13px;
-  z-index: 3000;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  .log-notification {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(99, 102, 241, 0.95);
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: 0.4s;
+    pointer-events: none;
+    font-size: 13px;
+    z-index: 3000;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  }
+  .log-notification.show { opacity: 1; transform: translateY(0); }
 }
-.log-notification.show { opacity: 1; transform: translateY(0); }
 
 /* モーダルの背景 */
 .logModal {
@@ -365,10 +390,9 @@ button:hover {
 // ==========================================
 // 🔧 カスタマイズエリア：更新情報の追加
 // ==========================================
-// 新しいお知らせを一番上に追加していきます。
-// 例： { date: "YYYY/MM/DD", text: "お知らせ内容" }, （最後にカンマを忘れないように！）
 const updateNewsList = [
-  { date: "2026/04/28", text: "実績の追加、実績画面での達成条件の表示、ログ通知機能、更新情報ページを実装しました。" },
+  { date: "2026/04/28", text: "単語の追加と、新しい特殊実績を実装しました。ぜひ集めてみてください！" },
+  { date: "2026/04/28", text: "実績の追加、実績画面での達成条件表示、ログ通知機能、更新情報ページを実装しました。" },
   { date: "2026/04/27", text: "ZMTQuizを実装しました。全問正解を目指してみてください！" },
   { date: "2026/04/27", text: "ZMTQランダム作文アプリを公開しました。" }
 ];
@@ -376,27 +400,20 @@ const updateNewsList = [
 // ==========================================
 // 🔧 カスタマイズエリア：単語の追加
 // ==========================================
-// それぞれの配列 [ ] の中に、"単語", の形式で追加します。
 const normal = {
   when: [
     "今日","さっき","昨日","一週間前","三か月前","一年前","十年前","千年前","だいぶ前","いつか分からんけど"
-    // ▼ ここに「いつ」を追加 ▼
-    
   ],
   where: [
     "バネッサで","妖精国で","氷河坑道連邦で","獣の国で","世界樹図書館で","東の国で","華都で","ニライカナイで","吸血鬼城で","魔王領で","教団市国で","蒼い月の裏側で","その辺で"
-    // ▼ ここに「どこで」を追加 ▼
-    
   ],
   who: [
-    "勇者が","古代勇者が","魔王軍が","魔王軍四天王が","妖精が","魔導士が","騎士が","獣人が","商人が","神官が","壱ノ護王が","弐ノ護王が","參ノ護王が","肆ノ護王が","神王グゴールが","その辺の人が"
-    // ▼ ここに「誰が」を追加 ▼
-    
+    "勇者が","古代勇者が","魔王軍が","魔王軍四天王が","妖精が","魔導士が","騎士が","獣人が","商人が","神官が","壱ノ護王が","弐ノ護王が","參ノ護王が","肆ノ護王が","神王グゴールが","その辺の人が",
+    "学者が" // ←追加
   ],
   what: [
-    "魔法の練習をした","ピクニックをした","お昼寝した","パーティーをした","爆発した","転んだ","歌い出した","踊り出した","迷言を言った","お団子を食べた","猛勉強した","記憶を取り戻した","武器を買った","扉をぶち壊した"
-    // ▼ ここに「何をした」を追加 ▼
-    
+    "魔法の練習をした","ピクニックをした","お昼寝した","パーティーをした","爆発した","転んだ","歌い出した","踊り出した","迷言を言った","お団子を食べた","猛勉強した","記憶を取り戻した","武器を買った","扉をぶち壊した","猫耳メイドになった",
+    "現界した" // ←追加
   ]
 };
 
@@ -407,12 +424,9 @@ const rare = {
   what: ["タイピングで競った"]
 };
 
-
 // ==========================================
 // 🔧 カスタマイズエリア：実績の定義
 // ==========================================
-// 新しい実績を増やす場合は、カテゴリの中に追加してください。
-// { name: "表示名", desc: "説明（ツールチップで表示されます）" }
 const ALL_ACHIEVEMENTS = {
   "生成": [
     { name: "ランダム作文ビギナー", desc: "ランダム作文を初めて生成した" },
@@ -440,12 +454,17 @@ const ALL_ACHIEVEMENTS = {
     { name: "ハッピーライフキング", desc: "楽しげな雰囲気の神王グゴールを観測した" },
     { name: "護王も歩けば転ぶ", desc: "護王が転んだ" },
     { name: "芸術は爆発だ！", desc: "爆発を10回検知した" },
-    { name: "何やっとんじゃこの筋肉錬磨ァ！！！", desc: "古代勇者によって氷河坑道連邦が破壊された" },
+    { name: "#世界を猫耳メイドで埋め尽くそう", desc: "猫耳メイドを10回検知した" },
+    { name: "何やっとんじゃこの筋肉達磨ァッ！！！！", desc: "古代勇者によって氷河坑道連邦が破壊された" },
     { name: "それどころではない", desc: "勇者か魔王軍四天王が蒼い月で呑気にしていた" },
     { name: "僕らだけのハッピーエンド？", desc: "神王グゴールが爆発した" },
     { name: "僕らだけの冒険を", desc: "千年前の古代勇者を発見した" },
     { name: "僕らだけのパーリナイ", desc: "楽しげな雰囲気を10回感知した" },
-    { name: "僕らだけのカチコミを", desc: "勇者が扉をぶち壊した" }
+    { name: "僕らだけのカチコミを", desc: "勇者が扉をぶち壊した" },
+    { name: "古代勇者の本気", desc: "古代勇者が現界した" }, // ←追加
+    { name: "命源揺蕩ウ流厳ノ水妃・ウンディーネ", desc: "水の原初精霊を感知した" }, // ←追加
+    { name: "終告ゲル絶望ノ皇氷・カリアッハヴェーラ", desc: "氷の原初精霊を感知した" }, // ←追加
+    { name: "世ヲ融カス神殺ノ青・カーラクータ", desc: "毒の原初精霊を感知した" } // ←追加
   ],
   "コンプリート": [
     { name: "実績コレクター", desc: "実績を50％以上解除した" },
@@ -455,21 +474,18 @@ const ALL_ACHIEVEMENTS = {
 };
 
 // ------------------------------------------------------------------
-// 以下、システムの中核プログラムです（基本的には編集不要です）
+// 以下、システムの中核プログラムです
 // ------------------------------------------------------------------
 
 const CORE_ACHIEVEMENT_COUNT = Object.values(ALL_ACHIEVEMENTS)
   .filter((_, i, arr) => i !== arr.length - 1).flat().length;
 
-// 状態管理
 let genCount = 0;
 let fortuneCount = 0;
 let partyCount = 0;
 let explosionCount = 0;
 let unlocked = new Set();
 let logs = [];
-
-// キュー管理
 let achievementQueue = [];
 let isShowingAchievement = false;
 
@@ -483,7 +499,6 @@ function loadData() {
     explosionCount = data.explosionCount || 0;
     logs = data.logs || [];
     unlocked = new Set(data.unlocked || []);
-    // ※コードに直接書き込んだ単語やニュースを反映させるため、localStorageからは読み込みません。
   }
 }
 
@@ -538,6 +553,12 @@ function generate() {
     if (explosionCount >= 10) unlock("芸術は爆発だ！");
   }
 
+  if (current.what.includes("猫耳メイド")) {
+    addLog("猫耳メイドを検知");
+    explosionCount++;
+    if (explosionCount >= 10) unlock("#世界を猫耳メイドで埋め尽くそう");
+  }
+  
   const isPartyWhat = current.what.includes("歌い出した") || current.what.includes("踊り出した") || current.what.includes("パーティーをした");
   if (isPartyWhat) {
     addLog("楽しげな雰囲気を感知");
@@ -561,7 +582,7 @@ function generate() {
     unlock("護王も歩けば転ぶ");
   }
   if (current.where.includes("氷河坑道連邦") && current.who.includes("古代勇者") && (current.what.includes("爆発した") || current.what.includes("扉をぶち壊した"))) {
-    unlock("何やっとんじゃこの筋肉錬磨ァ！！！");
+    unlock("何やっとんじゃこの筋肉達磨ァッ！！！！");
   }
   
   const isSoreWho = current.who.includes("勇者") || current.who.includes("魔王軍四天王");
@@ -574,6 +595,24 @@ function generate() {
   }
   if (current.who.includes("參ノ護王") && current.what.includes("お団子を食べた")) {
     addLog("魔王の主食を検出");
+  }
+
+  // ====== 新規追加した複合条件 ======
+  if (current.who.includes("古代勇者") && current.what.includes("現界した")) {
+    addLog("古代勇者の現界を感知");
+    unlock("古代勇者の本気");
+    
+    // 場所ごとの派生
+    if (current.where.includes("妖精国")) {
+      unlock("命源揺蕩ウ流厳ノ水妃・ウンディーネ");
+    }
+    if (current.where.includes("氷河坑道連邦")) {
+      unlock("終告ゲル絶望ノ皇氷・カリアッハヴェーラ");
+    }
+  }
+
+  if (current.where.includes("世界樹図書館") && current.who.includes("学者") && current.what.includes("現界した")) {
+    unlock("世ヲ融カス神殺ノ青・カーラクータ");
   }
 
   saveData();
