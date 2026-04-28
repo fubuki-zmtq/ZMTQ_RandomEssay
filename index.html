@@ -97,6 +97,43 @@ button:hover {
 }
 .menu-btn:hover { background: #e2e8f0; transform: translateY(-2px); }
 
+/* 通知と実績の基本設定（PC・スマホ共通） */
+.achievement {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #111;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 10px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: 0.4s;
+  pointer-events: none;
+  font-size: 14px;
+  z-index: 3000;
+}
+.achievement.show { opacity: 1; transform: translateY(0); }
+
+.log-notification {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(99, 102, 241, 0.95);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: 0.4s;
+  pointer-events: none;
+  font-size: 13px;
+  z-index: 3000;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.log-notification.show { opacity: 1; transform: translateY(0); }
+
+/* スマホ向けのレイアウト調整（位置だけを上書き） */
 @media (max-width: 600px) {
   body { padding: 10px; height: auto; }
   .card { width: 100%; padding: 25px; }
@@ -127,44 +164,6 @@ button:hover {
   .log-notification.show {
     transform: translate(-50%, 0);
   }
-}
-
-/* パソコン用の基本設定 */
-@media (min-width: 601px) {
-  .achievement {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: #111;
-    color: white;
-    padding: 12px 18px;
-    border-radius: 10px;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: 0.4s;
-    pointer-events: none;
-    font-size: 14px;
-    z-index: 3000;
-  }
-  .achievement.show { opacity: 1; transform: translateY(0); }
-
-  .log-notification {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    background: rgba(99, 102, 241, 0.95);
-    color: white;
-    padding: 10px 16px;
-    border-radius: 8px;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: 0.4s;
-    pointer-events: none;
-    font-size: 13px;
-    z-index: 3000;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  }
-  .log-notification.show { opacity: 1; transform: translateY(0); }
 }
 
 /* モーダルの背景 */
@@ -461,10 +460,10 @@ const ALL_ACHIEVEMENTS = {
     { name: "僕らだけの冒険を", desc: "千年前の古代勇者を発見した" },
     { name: "僕らだけのパーリナイ", desc: "楽しげな雰囲気を10回感知した" },
     { name: "僕らだけのカチコミを", desc: "勇者が扉をぶち壊した" },
-    { name: "古代勇者の本気", desc: "古代勇者が現界した" }, // ←追加
-    { name: "命源揺蕩ウ流厳ノ水妃・ウンディーネ", desc: "水の原初精霊を感知した" }, // ←追加
-    { name: "終告ゲル絶望ノ皇氷・カリアッハヴェーラ", desc: "氷の原初精霊を感知した" }, // ←追加
-    { name: "世ヲ融カス神殺ノ青・カーラクータ", desc: "毒の原初精霊を感知した" } // ←追加
+    { name: "古代勇者の本気", desc: "古代勇者が現界した" },
+    { name: "命源揺蕩ウ流厳ノ水妃・ウンディーネ", desc: "水の原初精霊を感知した" },
+    { name: "終告ゲル絶望ノ皇氷・カリアッハヴェーラ", desc: "氷の原初精霊を感知した" },
+    { name: "世ヲ融カス神殺ノ青・カーラクータ", desc: "毒の原初精霊を感知した" }
   ],
   "コンプリート": [
     { name: "実績コレクター", desc: "実績を50％以上解除した" },
