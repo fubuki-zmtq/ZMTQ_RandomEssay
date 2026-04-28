@@ -467,7 +467,7 @@ const normal = {
     "バネッサで","妖精国で","氷河坑道連邦で","獣の国で","世界樹図書館で","東の国で","華都で","ニライカナイで","吸血鬼城で","魔王領で","教団市国で","蒼い月の裏側で","その辺で"
   ],
   who: [
-    "勇者が","古代勇者が","魔王軍が","魔王軍四天王が","妖精が","魔導士が","騎士が","獣人が","商人が","神官が","壱ノ護王が","弐ノ護王が","參ノ護王が","肆ノ護王が","神王グゴールが","その辺の人が",
+    "勇者が","古代勇者が","魔王軍が","魔王軍四天王が","妖精が","魔導士が","騎士が","獣人が","商人が","賢者が","戦士が","神官が","壱ノ護王が","弐ノ護王が","參ノ護王が","肆ノ護王が","神王グゴールが","その辺の人が",
     "学者が"
   ],
   what: [
@@ -514,12 +514,13 @@ const ALL_ACHIEVEMENTS = {
     { name: "護王も歩けば転ぶ", desc: "護王が転んだ" },
     { name: "芸術は爆発だ！", desc: "爆発を10回検知した" },
     { name: "#世界を猫耳メイドで埋め尽くそう", desc: "猫耳メイドを10回検知した" },
-    { name: "何やっとんじゃこの筋肉達磨ァッ！！！！", desc: "古代勇者によって氷河坑道連邦が破壊された" },
+    { name: "何やっとんじゃこの筋肉達磨ァッ！！！！", desc: "筋肉達磨によって氷河坑道連邦が破壊された" },
     { name: "それどころではない", desc: "勇者か魔王軍四天王が蒼い月で呑気にしていた" },
     { name: "僕らだけのハッピーエンド？", desc: "神王グゴールが爆発した" },
     { name: "僕らだけの冒険を", desc: "千年前の古代勇者を発見した" },
     { name: "僕らだけのパーリナイ", desc: "楽しげな雰囲気を10回感知した" },
     { name: "僕らだけのカチコミを", desc: "勇者が扉をぶち壊した" },
+    { name: "Why危機？", desc: "泥酔の賢者を確認した" },
     { name: "古代勇者の本気", desc: "古代勇者が現界した" },
     { name: "命源揺蕩ウ流厳ノ水妃・ウンディーネ", desc: "水の原初精霊を感知した" },
     { name: "終告ゲル絶望ノ皇氷・カリアッハヴェーラ", desc: "氷の原初精霊を感知した" },
@@ -716,7 +717,7 @@ function generate() {
   if (current.who.includes("護王") && current.what.includes("転んだ")) {
     unlock("護王も歩けば転ぶ");
   }
-  if (current.where.includes("氷河坑道連邦") && current.who.includes("古代勇者") && (current.what.includes("爆発した") || current.what.includes("扉をぶち壊した"))) {
+  if (current.where.includes("氷河坑道連邦") && current.who.includes("古代勇者") || current.who.includes("戦士") && (current.what.includes("爆発した") || current.what.includes("扉をぶち壊した"))) {
     unlock("何やっとんじゃこの筋肉達磨ァッ！！！！");
   }
   
@@ -728,8 +729,14 @@ function generate() {
   if (current.who === "勇者が" && current.what.includes("扉をぶち壊した")) {
     unlock("僕らだけのカチコミを");
   }
+  
   if (current.who.includes("參ノ護王") && current.what.includes("お団子を食べた")) {
     addLog("魔王の主食を検出");
+  }
+
+  if (current.who.includes("賢者") && current.what.includes("迷言を言った")) {
+    addLog("泥酔の賢者を確認");
+    unlock("Why危機？");
   }
 
   if (current.who.includes("古代勇者") && current.what.includes("現界した")) {
