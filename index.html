@@ -141,7 +141,6 @@ button:hover {
   .result { font-size: 16px; }
   button { width: 100%; margin-top: 12px; }
 
-  /* 実績ポップアップ：スマホでは画面下部の中央から出現 */
   .achievement {
     right: auto;
     left: 50%;
@@ -153,7 +152,6 @@ button:hover {
     transform: translate(-50%, 0);
   }
 
-  /* ログ通知：スマホでは画面上部の中央から出現 */
   .log-notification {
     left: 50%;
     bottom: auto;
@@ -390,6 +388,7 @@ button:hover {
 // 🔧 カスタマイズエリア：更新情報の追加
 // ==========================================
 const updateNewsList = [
+  { date: "2026/04/28", text: "諸々のバグを直しました。過去に条件を満たし、まだ通知されていない新しい実績がある場合、次に「生成する」や「占い」を押したときにまとめて実績解除の通知がやってくるかもしれません。" },
   { date: "2026/04/28", text: "単語の追加と、新しい特殊実績を実装しました。ぜひ集めてみてください！" },
   { date: "2026/04/28", text: "実績の追加、実績画面での達成条件表示、ログ通知機能、更新情報ページを実装しました。" },
   { date: "2026/04/27", text: "ZMTQuizを実装しました。全問正解を目指してみてください！" },
@@ -408,11 +407,11 @@ const normal = {
   ],
   who: [
     "勇者が","古代勇者が","魔王軍が","魔王軍四天王が","妖精が","魔導士が","騎士が","獣人が","商人が","神官が","壱ノ護王が","弐ノ護王が","參ノ護王が","肆ノ護王が","神王グゴールが","その辺の人が",
-    "学者が" // ←追加
+    "学者が"
   ],
   what: [
     "魔法の練習をした","ピクニックをした","お昼寝した","パーティーをした","爆発した","転んだ","歌い出した","踊り出した","迷言を言った","お団子を食べた","猛勉強した","記憶を取り戻した","武器を買った","扉をぶち壊した","猫耳メイドになった",
-    "現界した" // ←追加
+    "現界した"
   ]
 };
 
@@ -476,8 +475,14 @@ const ALL_ACHIEVEMENTS = {
 // 以下、システムの中核プログラムです
 // ------------------------------------------------------------------
 
-const CORE_ACHIEVEMENT_COUNT = Object.values(ALL_ACHIEVEMENTS)
-  .filter((_, i, arr) => i !== arr.length - 1).flat().length;
+// 修正ポイント：現在の公式リストにある実績名のみを抽出して正解リストを作ります
+const VALID_CORE_ACHIEVEMENTS = new Set(
+  Object.values(ALL_ACHIEVEMENTS)
+    .filter((_, i, arr) => i !== arr.length - 1)
+    .flat()
+    .map(a => a.name)
+);
+const CORE_ACHIEVEMENT_COUNT = VALID_CORE_ACHIEVEMENTS.size;
 
 let genCount = 0;
 let fortuneCount = 0;
@@ -525,18 +530,15 @@ function generate() {
   updateText(current);
   genCount++;
 
-  // 生成実績
   if (genCount >= 1) unlock("ランダム作文ビギナー");
   if (genCount >= 10) unlock("ランダム作文常連");
   if (genCount >= 100) unlock("ランダム作文マスター");
 
-  // レアリティ実績
   if (rareCount === 1) unlock("ラッキーパーソン");
   if (rareCount === 2) unlock("能力：運が高い");
   if (rareCount === 3) unlock("幸運の申し子");
   if (rareCount >= 4) unlock("豪運の魔道士");
 
-  // 通常ログ
   if (current.when.includes("千年前")) addLog("古き時代を感知");  
   if (current.where.includes("月")) addLog("異常領域：月面反応あり");
   if (current.who.includes("勇者")) addLog("勇者を確認");
@@ -565,7 +567,6 @@ function generate() {
     if (partyCount >= 10) unlock("僕らだけのパーリナイ");
   }
 
-  // 複合条件ログ＆実績
   if (current.when.includes("千年前") && current.who.includes("古代勇者")) {
     addLog("伝説の旅を検出");
     unlock("僕らだけの冒険を");
@@ -585,7 +586,7 @@ function generate() {
   }
   
   const isSoreWho = current.who.includes("勇者") || current.who.includes("魔王軍四天王");
-  const isSoreWhat = isPartyWhat || current.what.includes("お昼寝した") || current.what.includes("ピクニックをした") || current.what.includes("お団子を食べた") || current.what.includes("タイピングで競った");
+  const isSoreWhat = isPartyWhat || current.what.includes("お昼寝した") || current.what.includes("ピクニックをした") || current.what.includes("お団子を食べた") || current.what.includes("タイ借で競った");
   if (current.where.includes("蒼い月の裏側") && isSoreWho && isSoreWhat) {
     unlock("それどころではない");
   }
@@ -596,12 +597,10 @@ function generate() {
     addLog("魔王の主食を検出");
   }
 
-  // ====== 新規追加した複合条件 ======
   if (current.who.includes("古代勇者") && current.what.includes("現界した")) {
     addLog("古代勇者の現界を感知");
     unlock("古代勇者の本気");
     
-    // 場所ごとの派生
     if (current.where.includes("妖精国")) {
       unlock("命源揺蕩ウ流厳ノ水妃・ウンディーネ");
     }
@@ -649,7 +648,6 @@ function backHome() {
   document.getElementById("home").classList.remove("hidden");
 }
 
-// ===== 実績・通知システム =====
 function unlock(name) {
   if (unlocked.has(name)) return;
   unlocked.add(name);
@@ -679,10 +677,11 @@ function showNextAchievement() {
   }, 2500);
 }
 
+// 修正ポイント：現在有効な実績の数だけを数えます
 function checkCompletion() {
   let currentCoreCount = 0;
   for(let item of unlocked) {
-    if(item !== "実績コレクター" && item !== "実績エキスパート" && item !== "世界の理を知る者") {
+    if(VALID_CORE_ACHIEVEMENTS.has(item)) {
       currentCoreCount++;
     }
   }
@@ -706,7 +705,6 @@ function addLog(text) {
   saveData();
 }
 
-// ===== モーダル関連 =====
 function closeModal(id) {
   document.getElementById(id).classList.add("hidden");
 }
@@ -717,9 +715,17 @@ function openLog() {
   document.getElementById("logModal").classList.remove("hidden");
 }
 
+// 修正ポイント：実績画面を開いたときも現在有効な実績だけを基準にパーセンテージを計算します
 function openAchievements() {
   const box = document.getElementById("achievementsContent");
-  let currentCoreCount = Array.from(unlocked).filter(i => i !== "実績コレクター" && i !== "実績エキスパート" && i !== "世界の理を知る者").length;
+  
+  let currentCoreCount = 0;
+  for(let item of unlocked) {
+    if(VALID_CORE_ACHIEVEMENTS.has(item)) {
+      currentCoreCount++;
+    }
+  }
+  
   const progressPercent = Math.floor((currentCoreCount / CORE_ACHIEVEMENT_COUNT) * 100);
   
   let html = `<div style="text-align:center; font-size:16px; font-weight:bold; color:#10b981; margin-bottom:15px;">達成率: ${progressPercent}%</div>`;
@@ -749,7 +755,6 @@ function openNews() {
   document.getElementById("newsModal").classList.remove("hidden");
 }
 
-// ===== 占い =====
 const fortunes = {
   daikichi: { name: "大吉", class: "daikichi", msgs: ["理由は特にない", "魔法に目覚めるかも？", "今宵は星が綺麗でしょう"] },
   chukichi: { name: "中吉", class: "chukichi", msgs: ["空が青いから", "海が続いているから", "光魔法を浴びたい"] },
@@ -783,7 +788,6 @@ function openFortune() {
   saveData();
 }
 
-// ===== ZMTQuiz =====
 const quizData = [
   { q: "問1　カンボジア？", opts: ["A. カリフラワー！", "B. ブロッコリー！", "C. トメイトォ！", "D. エッグプラント！"], ans: 1 },
   { q: "問2　ムチグラ？", opts: ["A. バルーン！", "B. アミーゴォ！", "C. メキシコォ！", "D. カルパッチョ！"], ans: 1 },
