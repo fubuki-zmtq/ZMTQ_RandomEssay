@@ -11,9 +11,7 @@
 
 body {
   margin: 0;
-  /* 明朝体を指定して小説・ファンタジー感を演出 */
   font-family: 'Shippori Mincho', "Yu Mincho", "Noto Serif JP", serif;
-  /* 深い夜空・魔力空間をイメージした背景 */
   background: linear-gradient(135deg, #09090e, #1a1a2e, #16213e);
   color: #e2e8f0;
   display: flex;
@@ -25,13 +23,12 @@ body {
 }
 
 .card {
-  /* 半透明の暗いカードで魔法陣や魔導書のような質感を */
   background: rgba(30, 41, 59, 0.7);
   padding: 40px;
   border-radius: 12px;
   box-sizing: border-box;
   box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-  border: 1px solid rgba(251, 191, 36, 0.3); /* 薄いゴールドの枠 */
+  border: 1px solid rgba(251, 191, 36, 0.3);
   backdrop-filter: blur(10px);
   width: 540px;
   max-width: 90vw;
@@ -40,7 +37,7 @@ body {
 }
 
 h1, h2, h3 {
-  color: #fbbf24; /* ゴールドの文字 */
+  color: #fbbf24;
   text-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
   letter-spacing: 2px;
 }
@@ -86,7 +83,6 @@ button:hover {
 .note { font-size: 12px; color: #94a3b8; }
 .rare { margin-top: 15px; font-weight: bold; letter-spacing: 2px; }
 
-/* ダークテーマに合わせたレアリティの色調整 */
 .ultra { color: #fbbf24; text-shadow: 0 0 10px #fbbf24; }
 .hyper { color: #ef4444; text-shadow: 0 0 10px #ef4444; }
 .super { color: #a855f7; text-shadow: 0 0 10px #a855f7; }
@@ -187,13 +183,22 @@ input:checked + .slider:before { transform: translateX(20px); background-color: 
 .log-box-style { width: 480px; max-height: 75vh; }
 .quiz-box-style { width: 580px; max-height: 85vh; }
 
+/* おしゃれな✕ボタンのスタイル */
 .outer-close-btn {
   position: fixed; top: 20px; right: 20px; width: 44px; height: 44px;
   background: rgba(15, 23, 42, 0.6); color: #94a3b8; line-height: 44px; text-align: center;
-  font-size: 20px; cursor: pointer; border-radius: 50%; transition: 0.3s;
-  user-select: none; z-index: 2100; border: 1px solid #334155;
+  font-size: 20px; cursor: pointer; border-radius: 50%; 
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none; z-index: 2100; border: 1px solid #475569;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
 }
-.outer-close-btn:hover { background: rgba(239, 68, 68, 0.8); color: white; border-color: #ef4444; transform: rotate(90deg); }
+.outer-close-btn:hover { 
+  background: rgba(30, 41, 59, 0.9); 
+  color: #fbbf24; 
+  border-color: #fbbf24; 
+  transform: rotate(180deg) scale(1.1);
+  box-shadow: 0 0 15px rgba(251, 191, 36, 0.5);
+}
 
 /* ツールチップ関連 */
 .ach-item {
@@ -367,10 +372,11 @@ input:checked + .slider:before { transform: translateX(20px); background-color: 
 // 🔧 カスタマイズエリア：更新情報の追加
 // ==========================================
 const updateNewsList = [
+  { date: "2026/05/16", text: "サイトデザインをリニューアルしました。" },
   { date: "2026/05/16", text: "ネタバレモードの仕様を変更しました。ネタバレになる単語・実績の調整を行いました。ネタバレモードをオンにするにはZMTQuizに全問正解する必要があります。" },
   { date: "2026/04/28", text: "単語と実績を追加しました。データリセット機能を実装しました。" },
   { date: "2026/04/28", text: "初見の方でも安心して遊べるように「ネタバレモード」を追加しました。" },
-  { date: "2026/04/28", text: "単語の追加と、新しい特殊実績を実装しました。ぜひ集めてみてください！" },
+  { date: "2026/04/28", text: "単語の追加と、新しい特殊実績を実装しました。ぜひ集めてみてください！　※更新に伴い実績が見えなくなった時は、もう一度文章生成や占いを行うと現時点で達成している実績が解除されます。" },
   { date: "2026/04/28", text: "実績の追加、実績画面での達成条件表示、ログ通知機能、更新情報ページを実装しました。" },
   { date: "2026/04/27", text: "ZMTQuizを実装しました。全問正解を目指してみてください！" },
   { date: "2026/04/27", text: "ZMTQランダム作文アプリを公開しました。" }
@@ -457,8 +463,6 @@ const ALL_ACHIEVEMENTS = {
 // ==========================================
 // 🔧 特定実績の手動解禁フラグ
 // ==========================================
-// 個別に true に書き換えることで、対応する精霊の実績が解禁されます。
-// （ネタバレモードがオンの場合は、このフラグに関わらず条件達成で解除されます）
 const ENABLE_UNDINE = false;     // 命源揺蕩ウ流厳ノ水妃・ウンディーネ
 const ENABLE_CAILLEACH = false;  // 終告ゲル絶望ノ皇氷・カリアッハヴェーラ
 const ENABLE_KALAKUTA = false;   // 世ヲ融カス神殺ノ青・カーラクータ
@@ -500,7 +504,7 @@ let unlocked = new Set();
 let logs = [];
 let achievementQueue = [];
 let isShowingAchievement = false;
-let isSpoilerMode = false; // trueなら全解放、falseならネタバレ非表示
+let isSpoilerMode = false;
 
 function loadData() {
   const saved = localStorage.getItem('zmtq_save_data');
@@ -540,7 +544,6 @@ function pick(type) {
     isRarePicked = true;
   }
 
-  // ネタバレモードがオフの時のみ、単語を制限する
   if (!isSpoilerMode) {
     let safePool = pool.filter(word => !SPOILER_WORDS.includes(word));
     if (safePool.length === 0) {
@@ -560,7 +563,6 @@ function pick(type) {
 function handleSpoilerToggle(checkbox) {
   const wantToTurnOn = checkbox.checked;
 
-  // オンにする場合、ZMTQ博士の実績が必要
   if (wantToTurnOn && !unlocked.has("ZMTQ博士")) {
     alert("このモードを解放するには、ZMTQuizで全問正解し、見識を深める必要があります。");
     checkbox.checked = false;
@@ -697,7 +699,6 @@ function generate() {
     addLog("古代勇者の現界を感知");
     unlock("古代勇者の本気");
     
-    // スイッチによる個別の解禁判定
     if (isSpoilerMode || ENABLE_UNDINE) {
       if (current.where.includes("妖精国")) {
         unlock("命源揺蕩ウ流厳ノ水妃・ウンディーネ");
@@ -741,7 +742,6 @@ function start() {
 }
 
 function copyText() {
-  // <br>タグを改行なしの文字列に戻してコピーする
   const rawText = document.getElementById("text").innerHTML.replace(/<br>/g, "");
   navigator.clipboard.writeText(rawText);
   alert("観測記録をコピーしました。");
