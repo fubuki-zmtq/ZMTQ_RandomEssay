@@ -4,7 +4,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta charset="UTF-8">
 <title>ZMTQランダム作文</title>
-<link rel="icon" href="icon.png">
 
 <style>
 body {
@@ -16,7 +15,6 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  overflow-y: scroll; /* スクロールバーを常に表示して横ズレを防ぐ */
 }
 
 .card {
@@ -28,6 +26,7 @@ body {
   width: 540px;
   max-width: 90vw;
   text-align: center;
+  transition: width 0.3s ease;
 }
 
 button {
@@ -72,7 +71,7 @@ button:hover {
 .rare1 { color: blue; }
 
 .daikichi { color: gold; }
-.chukichi { green; }
+.chukichi { color: green; }
 .shokichi { color: orange; }
 .kyo { color: purple; }
 .special { color: #38bdf8; }
@@ -349,8 +348,8 @@ input:checked + .slider:before {
   
   <div style="margin-top: 25px; padding: 15px; background: #f8fafc; border-radius: 10px; display: flex; align-items: center; justify-content: space-between;">
     <div style="text-align: left;">
-      <div style="font-size: 14px; font-weight: bold; color: #334155;">ネタバレ防止モード</div>
-      <div style="font-size: 11px; color: #64748b; margin-top: 2px;">物語の核心に関わる単語を非表示にします</div>
+      <div style="font-size: 14px; font-weight: bold; color: #334155;">ネタバレモード</div>
+      <div style="font-size: 11px; color: #64748b; margin-top: 2px;">物語の核心に関わる単語と実績を解放します<br>（ZMTQuiz全問正解で解禁）</div>
     </div>
     <label class="toggle-switch">
       <input type="checkbox" id="spoilerToggle" onchange="handleSpoilerToggle(this)">
@@ -459,8 +458,9 @@ input:checked + .slider:before {
 
 <script>
 const updateNewsList = [
+  { date: "2026/05/16", text: "ネタバレモードの仕様を変更しました。ネタバレになる単語・実績の調整を行いました。ネタバレモードをオンにするにはZMTQuizに全問正解する必要があります。" },
   { date: "2026/04/28", text: "単語と実績を追加しました。データリセット機能を実装しました。" },
-  { date: "2026/04/28", text: "初見の方でも安心して遊べるように「ネタバレ防止モード」を追加しました。" },
+  { date: "2026/04/28", text: "初見の方でも安心して遊べるように「ネタバレモード」を追加しました。" },
   { date: "2026/04/28", text: "単語の追加と、新しい特殊実績を実装しました。ぜひ集めてみてください！　※更新に伴い実績が見えなくなった時は、もう一度文章生成や占いを行うと現時点で達成している実績が解除されます。" },
   { date: "2026/04/28", text: "実績の追加、実績画面での達成条件表示、ログ通知機能、更新情報ページを実装しました。" },
   { date: "2026/04/27", text: "ZMTQuizを実装しました。全問正解を目指してみてください！" },
@@ -539,6 +539,17 @@ const ALL_ACHIEVEMENTS = {
   ]
 };
 
+// ==========================================
+// 🔧 特定実績の手動解禁フラグ
+// ==========================================
+// 今後「現界した」などをネタバレ単語から外した際でも、
+// 以下のフラグを true にするまで「命源揺蕩ウ流厳ノ水妃・ウンディーネ」等の精霊実績は解除されません。
+// （ネタバレモードがオンの場合は、このフラグに関わらず解除されます）
+const ENABLE_ADVANCED_ACHIEVEMENTS = false;
+
+// ==========================================
+// 🔧 ネタバレとして扱う単語の定義
+// ==========================================
 const SPOILER_WORDS = [
   "蒼い月の裏側で",
   "神王グゴールが",
@@ -546,8 +557,16 @@ const SPOILER_WORDS = [
   "肆ノ護王が",
   "記憶を取り戻した",
   "現界した",
-  "人類が滅ぶ前"
+  "人類が滅ぶ前",
+  "世界樹図書館で",
+  "ニライカナイで",
+  "吸血鬼城で",
+  "教団市国で"
 ];
+
+// ------------------------------------------------------------------
+// 以下、システムの中核プログラムです
+// ------------------------------------------------------------------
 
 const VALID_CORE_ACHIEVEMENTS = new Set(
   Object.values(ALL_ACHIEVEMENTS)
@@ -565,7 +584,7 @@ let unlocked = new Set();
 let logs = [];
 let achievementQueue = [];
 let isShowingAchievement = false;
-let isSpoilerMode = false;
+let isSpoilerMode = false; // trueなら全解放、falseならネタバレ非表示
 
 function loadData() {
   const saved = localStorage.getItem('zmtq_save_data');
@@ -605,7 +624,8 @@ function pick(type) {
     isRarePicked = true;
   }
 
-  if (isSpoilerMode) {
+  // ネタバレモードがオフの時のみ、単語を制限する
+  if (!isSpoilerMode) {
     let safePool = pool.filter(word => !SPOILER_WORDS.includes(word));
     if (safePool.length === 0) {
       safePool = normal[type].filter(word => !SPOILER_WORDS.includes(word));
@@ -623,18 +643,25 @@ function pick(type) {
 
 function handleSpoilerToggle(checkbox) {
   const wantToTurnOn = checkbox.checked;
+
+  if (wantToTurnOn && !unlocked.has("ZMTQ博士")) {
+    alert("このモードをオンにするには、ZMTQuizで全問正解する必要があります。");
+    checkbox.checked = false;
+    return;
+  }
+
   checkbox.checked = !wantToTurnOn;
 
   const msgEl = document.getElementById("spoilerConfirmMsg");
   const btnEl = document.getElementById("spoilerConfirmBtn");
 
   if (wantToTurnOn) {
-    msgEl.innerText = "ネタバレ防止モードをオンにします。このモードをオンにすると一部の実績が達成できなくなりますがよろしいですか？";
+    msgEl.innerText = "ネタバレモードをオンにします。物語の核心に関わる単語や実績が解放されますがよろしいですか？";
     btnEl.innerText = "オンにする";
     btnEl.style.background = "#10b981";
     btnEl.onclick = () => confirmSpoilerToggle(true);
   } else {
-    msgEl.innerText = "ネタバレ防止モードをオフにします。よろしいですか？";
+    msgEl.innerText = "ネタバレモードをオフにします。よろしいですか？";
     btnEl.innerText = "オフにする";
     btnEl.style.background = "#ef4444";
     btnEl.onclick = () => confirmSpoilerToggle(false);
@@ -751,16 +778,20 @@ function generate() {
     addLog("古代勇者の現界を感知");
     unlock("古代勇者の本気");
     
-    if (current.where.includes("妖精国")) {
-      unlock("命源揺蕩ウ流厳ノ水妃・ウンディーネ");
-    }
-    if (current.where.includes("氷河坑道連邦")) {
-      unlock("終告ゲル絶望ノ皇氷・カリアッハヴェーラ");
+    if (isSpoilerMode || ENABLE_ADVANCED_ACHIEVEMENTS) {
+      if (current.where.includes("妖精国")) {
+        unlock("命源揺蕩ウ流厳ノ水妃・ウンディーネ");
+      }
+      if (current.where.includes("氷河坑道連邦")) {
+        unlock("終告ゲル絶望ノ皇氷・カリアッハヴェーラ");
+      }
     }
   }
 
-  if (current.where.includes("世界樹図書館") && current.who.includes("学者") && current.what.includes("現界した")) {
-    unlock("世ヲ融カス神殺ノ青・カーラクータ");
+  if (isSpoilerMode || ENABLE_ADVANCED_ACHIEVEMENTS) {
+    if (current.where.includes("世界樹図書館") && current.who.includes("学者") && current.what.includes("現界した")) {
+      unlock("世ヲ融カス神殺ノ青・カーラクータ");
+    }
   }
 
   saveData();
@@ -889,6 +920,8 @@ function openAchievements() {
       }
     });
   }
+  
+  html += `<div style="margin-top: 20px; padding: 12px; background: #eef2ff; border-radius: 8px; font-size: 13px; color: #475569; text-align: center;">ZMTQの物語が進むと、獲得できる実績が増えます。お楽しみに！</div>`;
   box.innerHTML = html;
   document.getElementById("achievementsModal").classList.remove("hidden");
 }
